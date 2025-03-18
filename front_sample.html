@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>SDN 이미지 처리</title>
+  </head>
+  <body>
+    <h1>이미지 업로드 및 SDN 처리</h1>
+    <input type="file" id="imageInput" accept="image/*" />
+    <label for="noiseLevel">노이즈 레벨 (0.0 ~ 1.0):</label>
+    <input
+      type="number"
+      id="noiseLevel"
+      min="0"
+      max="1"
+      step="0.01"
+      value="0.05"
+    />
+    <button id="processButton">이미지 처리</button>
+    <div id="resultContainer">
+      <h2>처리 결과</h2>
+      <img
+        id="processedImage"
+        src="#"
+        alt="처리된 이미지"
+        style="display: none; max-width: 500px"
+      />
+      <p id="loadingMessage" style="display: none">이미지 처리 중...</p>
+    </div>
+
+    <script>
+      const imageInput = document.getElementById("imageInput");
+      const processButton = document.getElementById("processButton");
+      const processedImage = document.getElementById("processedImage");
+      const resultContainer = document.getElementById("resultContainer");
+      const loadingMessage = document.getElementById("loadingMessage");
+      const noiseLevelInput = document.getElementById("noiseLevel");
+
+      processButton.addEventListener("click", () => {
+        const file = imageInput.files[0];
+        const noiseLevel = noiseLevelInput.value;
+
+        if (file) {
+          const formData = new FormData();
+          formData.append("image", file);
+          formData.append("noise_level", noiseLevel);
+
+          loadingMessage.style.display = "block";
+          processedImage.style.display = "none";
+
+          fetch("/apply_sdn", {
+            method: "POST",
+            body: formData,
+          })
+            .then((response) => response.blob())
+            .then((blob) => {
+              const imageUrl = URL.createObjectURL(blob);
+              processedImage.src = imageUrl;
+              processedImage.style.display = "block";
+              loadingMessage.style.display = "none";
+            })
+            .catch((error) => {
+              console.error("Error processing image:", error);
+              loadingMessage.style.display = "none";
+              alert("이미지 처리 중 오류가 발생했습니다.");
+            });
+        } else {
+          alert("이미지를 선택해주세요.");
+        }
+      });
+    </script>
+  </body>
+</html>
