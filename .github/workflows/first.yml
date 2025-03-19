@@ -1,8 +1,10 @@
-name : Our First Workflow
-on : push
-jobs :
+name: Our First Workflow
+on: push
+jobs:
   Students:
     runs-on: windows-latest
     steps:
       - name: Print Student Name
-        uses: echo "Python 3.12.8"
+        run: echo "Student Name: [김대원]"
+      - name: Print Python Version
+        run: python --version
