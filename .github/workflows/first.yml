@@ -5,4 +5,4 @@ jobs :
     runs-on: Python 3.12.8
     steps:
       - name: Print Student Name
-        run: echo "Student Name: 김대원"
+        run: echo "Student Name: [김대원]"
