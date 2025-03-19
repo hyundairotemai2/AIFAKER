@@ -5,4 +5,4 @@ jobs :
     runs-on: windows-latest
     steps:
       - name: Print Student Name
-        run: echo "Student Name: [김대원]"
+        uses: echo "Python 3.12.8"
