@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ post.title }}</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+
+    <nav>
+        <a href="/" class="btn">← 홈으로</a>
+    </nav>
+
+    <div class="container">
+        <div class="post-card">
+            <h1>{{ post.title }}</h1>
+            <p>{{ post.content }}</p>
+        </div>
+
+        <h2>댓글</h2>
+        <div class="comment-section">
+            {% if comments %}
+                {% for comment in comments %}
+                    <div class="comment-bubble">{{ comment }}</div>
+                {% endfor %}
+            {% else %}
+                <p class="no-comments">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</p>
+            {% endif %}
+        </div>
+
+        <form method="post" action="/post/{{ post_id }}/comment">
+            <input type="text" name="comment" required placeholder="댓글을 입력하세요...">
+            <button type="submit" class="btn">댓글 작성</button>
+        </form>
+    </div>
+
+</body>
+</html>
