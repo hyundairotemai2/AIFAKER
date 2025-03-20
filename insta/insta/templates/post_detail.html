@@ -1,39 +1,57 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ post.title }}</title>
-    <link rel="stylesheet" type="text/css" href="/static/style.css">
+<title>MY BLOG - Post Detail</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
+<style>
+body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+</style>
 </head>
-<body>
+<body class="w3-light-grey">
 
-    <nav>
-        <a href="/" class="btn">← 홈으로</a>
-    </nav>
+<div class="w3-content" style="max-width:1400px">
 
-    <div class="container">
-        <div class="post-card">
-            <h1>{{ post.title }}</h1>
-            <p>{{ post.content }}</p>
-        </div>
+  <header class="w3-container w3-center w3-padding-32 w3-green"> 
+    <h1 style="font-weight: bold; font-size: 2.5em;">MY BLOG</h1>
+  </header>
 
-        <h2>댓글</h2>
-        <div class="comment-section">
-            {% if comments %}
-                {% for comment in comments %}
-                    <div class="comment-bubble">{{ comment }}</div>
-                {% endfor %}
-            {% else %}
-                <p class="no-comments">아직 댓글이 없습니다. 첫 번째 댓글을 남겨보세요!</p>
-            {% endif %}
-        </div>
-
-        <form method="post" action="/post/{{ post_id }}/comment">
-            <input type="text" name="comment" required placeholder="댓글을 입력하세요...">
-            <button type="submit" class="btn">댓글 작성</button>
-        </form>
+  <div class="w3-card-4 w3-margin w3-white">
+    {% if post.image_url %}
+      <img src="{{ post.image_url }}" style="width:100%">
+    {% endif %}
+    <div class="w3-container">
+      <h3><b>{{ post.title }}</b></h3>
+      <h5>작성일, <span class="w3-opacity">{{ post.date }}</span></h5>
     </div>
+    <div class="w3-container">
+      <p>{{ post.content }}</p>
+      <button class="w3-button w3-red" onclick="confirmDelete('{{ post.id }}')">글 삭제</button>
+    </div>
+  </div>
+
+  <button class="w3-button w3-dark-grey w3-margin-top" onclick="window.location.href='/'">홈으로 돌아가기</button>
+
+</div>
+
+<script>
+function confirmDelete(postId) {
+  if (confirm('정말로 이 글을 삭제하시겠습니까?')) {
+    fetch(`/delete/${postId}`, { method: 'DELETE' })
+      .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+          alert('글이 삭제되었습니다.');
+          window.location.href = '/';
+        } else {
+          alert('삭제에 실패했습니다.');
+        }
+      });
+  }
+}
+</script>
 
 </body>
 </html>
