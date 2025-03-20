@@ -35,5 +35,5 @@ def add_comment(post_id):
     return redirect(url_for('post_detail', post_id=post_id))
 
 if __name__ == '__main__':
-    # app.run(port=5011, debug=True)  # 개발 환경에서 사용
-    pass
+    app.run(host='0.0.0.0', port=80) #프로덕션 환경
+    # app.run(debug=True) #개발환경
