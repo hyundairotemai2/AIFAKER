@@ -1,8 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for
+import os
 
 app = Flask(__name__)
 
-# 임시 데이터 저장
+# 임시 데이터 저장 (Azure 재시작 시 초기화됨)
 posts = []
 comments = {}
 
@@ -34,6 +35,7 @@ def add_comment(post_id):
     comments[post_id].append(comment)
     return redirect(url_for('post_detail', post_id=post_id))
 
-if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=80) #프로덕션 환경
-    # app.run(debug=True) #개발환경
+# Azure 배포를 위한 포트 설정
+if __name__ != '__main__':
+    port = int(os.environ.get('PORT', 5000))  # Azure가 할당하는 포트 사용
+    app.run(host='0.0.0.0', port=port)
