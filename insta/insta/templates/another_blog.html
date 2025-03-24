@@ -30,8 +30,8 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
         {% endif %}
         <div class="w3-container">
           <h3><b>{{ post.title }}</b></h3>
-          <h5>작성일, <span class="w3-opacity">MARCH 20, 2025</span></h5>
-        </div>
+          <h5>작성일, <span class="w3-opacity">{{ post.date_str }}</span></h5>    
+        </div>        
         <div class="w3-container">
           <p>{{ post.content[:100] }}...</p>
           <button class="w3-button w3-padding-large w3-white w3-border" onclick="window.location.href='/post/{{ post.id }}'">
@@ -47,8 +47,10 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card w3-margin w3-margin-top">
         <img src="/static/images/shiba.jpg" style="width:100%">
         <div class="w3-container w3-white">
-          <h4><b>내 소개</b></h4>
-          <p>안녕하세요, 제 블로그에 오신걸 환영합니다!</p>
+          <div class = "sticky">
+            <h4><b>내 소개</b></h4>
+            <p>안녕하세요, 제 블로그에 오신걸 환영합니다!</p>
+          </div>        
         </div>
       </div>
 
