@@ -58,9 +58,22 @@ function previewImage(event) {
   };
   reader.readAsDataURL(image);
 }
-
 function applyFilter(img) {
-  img.style.filter = 'grayscale(100%)'; // 기본적으로 흑백 필터 적용
+  // noise_model.py를 호출하여 필터 적용
+  fetch('/apply_filter', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ image: img.src })
+  })
+  .then(response => response.json())
+  .then(data => {
+    img.src = data.filtered_image;
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
 }
 </script>
 
