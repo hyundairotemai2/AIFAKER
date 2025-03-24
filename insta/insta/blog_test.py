@@ -56,6 +56,7 @@ def post(post_id):
 def write():
     return render_template('write.html')
 
+
 # 업로드 가능한 확장자 지정
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
 
