@@ -8,6 +8,7 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+#preview { width: 100%; max-height: 400px; object-fit: cover; margin-top: 20px; }
 </style>
 </head>
 <body class="w3-light-grey">
@@ -20,7 +21,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   </header>
 
   <div class="w3-container w3-white w3-margin w3-padding">
-    <form action="/create_post" method="post" enctype="multipart/form-data">
+    <form action="/create_post" method="post" enctype="multipart/form-data" id="postForm">
       <label for="title"><b>제목</b></label>
       <input class="w3-input w3-border w3-margin-bottom" type="text" id="title" name="title" required>
 
@@ -28,7 +29,8 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <textarea class="w3-input w3-border" id="content" name="content" rows="10" required></textarea>
 
       <label for="image"><b>이미지 업로드</b></label>
-      <input class="w3-input w3-border w3-margin-bottom" type="file" id="image" name="image" accept="image/*">
+      <input class="w3-input w3-border w3-margin-bottom" type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
+      <img id="preview" style="display:none;">
 
       <button class="w3-button w3-green w3-margin-top" type="submit">글 작성하기</button>
       <a href="/" class="w3-button w3-dark-grey w3-margin-top">취소</a>
@@ -38,6 +40,29 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 
 <footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top">
 </footer>
+
+<script>
+function previewImage(event) {
+  const image = document.getElementById('image').files[0];
+  if (!image) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const img = document.getElementById('preview');
+    img.src = e.target.result;
+    img.style.display = 'block';
+
+    if (confirm('필터를 적용하시겠습니까?')) {
+      applyFilter(img);
+    }
+  };
+  reader.readAsDataURL(image);
+}
+
+function applyFilter(img) {
+  img.style.filter = 'grayscale(100%)'; // 기본적으로 흑백 필터 적용
+}
+</script>
 
 </body>
 </html>
