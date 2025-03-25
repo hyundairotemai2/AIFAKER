@@ -72,4 +72,4 @@ jobs:
         with:
           app-name: "AIFAKER"
           slot-name: "Production"
-          package: .
+          package: release.zip
