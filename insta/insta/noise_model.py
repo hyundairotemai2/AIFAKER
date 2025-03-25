@@ -2,7 +2,6 @@ import os
 import cv2
 import torch
 import numpy as np
-import matplotlib.pyplot as plt
 from PIL import Image
 import torchvision.transforms as transforms
 from diffusers import DDPMScheduler
