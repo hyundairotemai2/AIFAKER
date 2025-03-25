@@ -40,18 +40,18 @@ face_cascade = cv2.CascadeClassifier(haar_model_path)
 current_dir = os.path.dirname(os.path.abspath(__file__))
 print("현재 파일 경로:", current_dir)
 
-# insta/insta 폴더에서 두 단계 상위로 이동하면 AIFAKER 폴더가 됩니다.
-project_root = os.path.abspath(os.path.join(current_dir, "..", ".."))
-print("프로젝트 루트(즉, AIFAKER 폴더) 경로:", project_root)
+# lbfmodel.yaml은 같은 디렉토리에 있음
+lbf_model_path = os.path.join(current_dir, "lbfmodel.yaml")
 
-# AIFAKER 폴더 안에 lbfmodel.yaml 파일이 있는지 확인하고, 그 절대 경로를 구합니다.
-lbf_model_path = os.path.join(project_root, "lbfmodel.yaml")
+# 존재 여부 확인
 if not os.path.exists(lbf_model_path):
     raise FileNotFoundError(f"lbfmodel.yaml 파일을 찾을 수 없습니다: {lbf_model_path}")
+
 print("lbfmodel.yaml 파일의 절대 경로:", lbf_model_path)
+
+# 모델 로딩
 facemark = cv2.face.createFacemarkLBF()
 facemark.loadModel(lbf_model_path)
-
 
 def get_face_mask(pil_img):
     """
