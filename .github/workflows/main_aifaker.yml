@@ -1,7 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-# More info on Python, GitHub Actions, and Azure App Service: https://aka.ms/python-webapps-actions
-
 name: Build and deploy Python app to Azure Web App - AIFAKER
 
 on:
@@ -14,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read # Required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -22,38 +18,39 @@ jobs:
       - name: Set up Python version
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12'
+          python-version: "3.12"
 
-      - name: Create and start virtual environment
+      - name: Set up virtual environment and install dependencies
         run: |
+          set -e
+          cd insta/insta
           python -m venv venv
+          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/insta/insta/venv" >> $GITHUB_ENV
+          echo "$GITHUB_WORKSPACE/insta/insta/venv/bin" >> $GITHUB_PATH
           source venv/bin/activate
-      
-      - name: Install dependencies
-        run: pip install -r requirements.txt
-        
-      # Optional: Add step to run tests here (PyTest, Django test suites, etc.)
+          pip install --upgrade pip
+          pip install -r requirements.txt
 
       - name: Zip artifact for deployment
-        run: zip release.zip ./* -r
+        run: |
+          cd insta/insta
+          zip -r ../../release.zip . -x "venv/*"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: |
-            release.zip
-            !venv/
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
     environment:
-      name: 'Production'
+      name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -64,18 +61,17 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
-      
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_831F67A99F724BA0B59D02F56D75A151 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_848103B045874EBCB54118E13E30CDF8 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_A5229D40816B4C28B82F84C0FBD89CF8 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_6C87D8C2788F45D2AA6E60DA085ECCCE }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2B35D509F10B42729466203867A4ECAC }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_C2C01616FC564E38A0DD4E21677D10E3 }}
 
-      - name: 'Deploy to Azure Web App'
+      - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'AIFAKER'
-          slot-name: 'Production'
-          
+          app-name: "AIFAKER"
+          slot-name: "Production"
+          package: .

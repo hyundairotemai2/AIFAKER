@@ -1,2 +1,10 @@
 Flask
 gunicorn
+werkzeug
+opencv-contrib-python
+torch
+numpy
+matplotlib
+pillow
+torchvision
+diffusers
