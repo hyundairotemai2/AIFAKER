@@ -34,13 +34,13 @@ jobs:
       - name: Zip artifact for deployment
         run: |
           cd insta/insta
-          zip -r ../../release.zip . -x "venv/*" "__pycache__/*" "*.pyc"
+          zip -r ../../release.zip * -x "venv/*" "__pycache__/*" "*.pyc"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
         with:
           name: python-app
-          path: .
+          path: release.zip
 
   deploy:
     runs-on: ubuntu-latest
