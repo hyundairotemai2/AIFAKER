@@ -34,7 +34,7 @@ def set_korean_font():
         print("[경고] 한글 폰트를 찾을 수 없습니다. 기본 폰트 사용.")
 
 set_korean_font()
-
+#test
 def generate_sgn_noise(image_tensor, strength=0.03):
     """스타일GAN 기반 보호 노이즈 생성"""
     noise_layers = []
