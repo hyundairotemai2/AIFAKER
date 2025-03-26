@@ -5,24 +5,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome</title>
     <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+        }
+        .container {
+            max-width: 900px;
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        .header {
+            background: #4CAF50;
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            margin: -40px -40px 30px -40px;
+        }
+        h1 {
+            font-weight: 700;
+            font-size: 2.8em;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        p {
+            font-size: 1.3em;
+            margin: 10px 0 0;
+            color: #f0f0f0;
+        }
+        .button-container {
+            margin-top: 40px;
+        }
+        .w3-button {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .w3-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .w3-blue {
+            background: #2196F3;
+        }
+        .w3-teal {
+            background: #26A69A;
+        }
+        footer {
+            margin-top: 40px;
+            color: #000;
+            font-size: 0.9em;
+        }
+    </style>
 </head>
-<body class="w3-light-grey">
+<body>
 
-<div class="w3-content w3-center" style="max-width:800px; margin-top: 150px;">
-    <header class="w3-container w3-green w3-padding-32"> 
-        <h1 style="font-weight: bold; font-size: 2.5em;">Welcome!</h1>
-        <p style="font-size: 1.2em;">원하는 페이지로 이동하세요.</p>
+<div class="container">
+    <header class="header w3-container">
+        <h1>Welcome!</h1>
+        <p>원하는 페이지로 이동하세요.</p>
     </header>
 
-    <div class="w3-margin-top">
-        <button class="w3-button w3-blue w3-xlarge w3-margin" onclick="window.location.href='/login'">카카오톡</button>
-        <button class="w3-button w3-teal w3-xlarge w3-margin" onclick="window.location.href='/blog'">블로그</button>
+    <div class="button-container">
+        <button class="w3-button w3-blue w3-margin" onclick="window.location.href='/login'">카카오톡</button>
+        <button class="w3-button w3-teal w3-margin" onclick="window.location.href='/blog'">블로그</button>
     </div>
-</div>
 
-<footer class="w3-container w3-dark-grey w3-padding-16 w3-center">
-    <p>© 2025 My Website</p>
-</footer>
+    <footer class="w3-center">
+        <p>© 2025 Ai faker Project</p>
+    </footer>
+</div>
 
 </body>
 </html>
