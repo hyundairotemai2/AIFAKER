@@ -4,7 +4,7 @@ import io
 from flask import Flask, render_template, request, redirect, jsonify
 from werkzeug.utils import secure_filename
 from datetime import datetime
-#from noise_model import noise_model  # noise_model 모듈에서 noise_model 함수 임포트
+from noise_model import noise_model  # noise_model 모듈에서 noise_model 함수 임포트
 
 app = Flask(__name__)
 
