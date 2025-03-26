@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>블로그 홈</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>나만의 블로그</h1>
+        <p>일상을 공유하는 공간</p>
+        <a href="/new" class="btn">새 글 작성</a>
+    </header>
+
+    <div class="container">
+        <h2>최신 글</h2>
+        {% if posts %}
+            {% for post in posts %}
+                <div class="card">
+                    <h3>{{ post.title }}</h3>
+                    <p>{{ post.content[:100] }}...</p>
+                    <a href="/post/{{ loop.index0 }}" class="btn small">더 보기</a>
+                </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-posts">아직 작성된 글이 없습니다.</p>
+        {% endif %}
+    </div>
+
+</body>
+</html>
