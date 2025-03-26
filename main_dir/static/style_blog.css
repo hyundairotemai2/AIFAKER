@@ -1,0 +1,40 @@
+/* 게시글 카드 스타일 */
+.post-card {
+    background: white;
+    padding: 20px;
+    margin: 20px 0;
+    border-radius: 8px;
+    box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* 댓글 말풍선 스타일 */
+.comment-bubble {
+    background: #e9ecef;
+    padding: 12px;
+    margin: 8px 0;
+    border-radius: 18px;
+    display: inline-block;
+    max-width: 80%;
+}
+
+/* 댓글 없을 때 메시지 */
+.no-comments {
+    color: #777;
+    font-style: italic;
+}
+
+/* 버튼 스타일 개선 */
+.btn {
+    background: #2db400;
+    color: white;
+    padding: 10px 15px;
+    text-decoration: none;
+    border-radius: 5px;
+    display: inline-block;
+    margin-top: 10px;
+    text-align: center;
+}
+
+.btn:hover {
+    background: #239a00;
+}
