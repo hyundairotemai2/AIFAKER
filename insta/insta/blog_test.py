@@ -2,11 +2,22 @@ import os
 import base64
 import io
 from flask import Flask, render_template, request, redirect, jsonify
+from flask_socketio import SocketIO
 from werkzeug.utils import secure_filename
 from datetime import datetime
 from noise_model import noise_model  # noise_model 모듈에서 noise_model 함수 임포트
+from cosmos import runDemo
+
+import os
+
 
 app = Flask(__name__)
+# 추가: SocketIO 객체 생성
+socket = SocketIO(
+    app,
+    cors_allowed_origins="*",
+    transports=["websocket", "polling"]
+)
 
 # 문자열을 datetime 객체로 변환하는 함수
 def parse_date(date_str):
