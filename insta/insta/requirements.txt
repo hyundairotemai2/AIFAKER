@@ -7,3 +7,5 @@ pillow
 torch
 torchvision
 diffusers
+flask_socketio
+alive_progress
