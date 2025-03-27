@@ -1,10 +1,9 @@
-Flask
-gunicorn
-werkzeug
-opencv-python
-opencv-contrib-python
-torch
-numpy
-pillow
-torchvision
-diffusers
+Flask==3.1.0
+gunicorn==23.0.0
+werkzeug==3.1.3
+opencv-python-headless==4.11.0.86   # GUI 없이 서버용
+numpy==2.2.4
+pillow==11.1.0
+torch==2.1.2                        # 비교적 안정 버전, 용량 덜함
+torchvision==0.16.2                # torch 버전 호환
+diffusers==0.24.0                  # 최신보다 가벼운 안정 버전
