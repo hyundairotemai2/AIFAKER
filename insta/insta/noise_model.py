@@ -7,7 +7,7 @@ import torchvision.transforms as transforms
 from diffusers import DDPMScheduler
 
 # device 설정
-device = "cuda" if torch.cuda.is_available() else "cpu"
+#device = "cuda" if torch.cuda.is_available() else "cpu"
 
 # DDPM 스케줄러 초기화 (diffusers 라이브러리 필요)
 scheduler = DDPMScheduler(
