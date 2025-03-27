@@ -71,5 +71,5 @@ jobs:
         id: deploy-to-webapp
         with:
           app-name: "AIFAKER"
-          slot-name: "aifaker - v1"
+          slot-name: "aifaker-v1"
           package: release.zip
