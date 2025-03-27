@@ -8,3 +8,5 @@ numpy
 pillow
 torchvision
 diffusers
+matplotlib
+azure-cosmos

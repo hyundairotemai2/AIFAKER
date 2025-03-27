@@ -142,6 +142,7 @@ def write():
 def create_post():
     title = request.form['title']
     content = request.form['content']
+    apply_filter = request.form.get('apply_filter', 'no')  # 필터 적용 여부
     image_url = ''
     date = datetime.now()
 
@@ -151,7 +152,16 @@ def create_post():
             filename = secure_filename(image.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             image.save(image_path)
-            image_url = f'/static/uploads/{filename}'
+            
+            if apply_filter == 'yes':
+                # 흑백 필터 적용
+                img = Image.open(image_path).convert('L')  # 흑백 변환
+                filtered_filename = f"filtered_{filename}"
+                filtered_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_filename)
+                img.save(filtered_image_path)
+                image_url = f'/static/uploads/{filtered_filename}'
+            else:
+                image_url = f'/static/uploads/{filename}'
 
     new_id = max(post['id'] for post in posts) + 1 if posts else 1
     posts.append({
@@ -277,4 +287,5 @@ def logout():
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
+
     app.run(host="0.0.0.0", port=port, debug=True)
