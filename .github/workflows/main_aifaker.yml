@@ -1,5 +1,3 @@
-# .github/workflows/deploy.yml 또는 main.yml 등
-
 name: Build and deploy Python app to Azure Web App - AIFAKER
 
 on:
@@ -26,17 +24,15 @@ jobs:
         run: |
           set -e
           cd insta/insta
-          python -m venv venv
-          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/insta/insta/venv" >> $GITHUB_ENV
-          echo "$GITHUB_WORKSPACE/insta/insta/venv/bin" >> $GITHUB_PATH
-          source venv/bin/activate
+          python -m venv antenv
+          source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Zip artifact for deployment
+      - name: Zip artifact for deployment (including venv)
         run: |
           cd insta/insta
-          zip -r ../../release.zip * -x "venv/*" "__pycache__/*" "*.pyc"
+          zip -r ../../release.zip *
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
