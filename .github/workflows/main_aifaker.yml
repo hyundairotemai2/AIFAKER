@@ -1,3 +1,5 @@
+# .github/workflows/deploy.yml 또는 main.yml 등
+
 name: Build and deploy Python app to Azure Web App - AIFAKER
 
 on:
@@ -10,7 +12,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read # Required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4

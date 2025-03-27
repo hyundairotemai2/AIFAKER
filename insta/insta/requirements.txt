@@ -4,7 +4,7 @@ werkzeug
 opencv-python-headless
 numpy
 pillow
-torch
+torch==2.1.0
 torchvision
 diffusers
 flask_socketio
