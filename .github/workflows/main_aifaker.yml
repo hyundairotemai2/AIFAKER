@@ -20,21 +20,10 @@ jobs:
         with:
           python-version: "3.12"
 
-      - name: Set up virtual environment and install dependencies
-        run: |
-          set -e
-          cd main_dir
-          python -m venv venv
-          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/main_dir/venv" >> $GITHUB_ENV
-          echo "$GITHUB_WORKSPACE/main_dir/venv/bin" >> $GITHUB_PATH
-          source venv/bin/activate
-          pip install --upgrade pip
-          pip install -r requirements.txt
-
       - name: Zip artifact for deployment
         run: |
           cd main_dir
-          zip -r ../release.zip * -x "venv/*" "__pycache__/*" "*.pyc"
+          zip -r ../release.zip * -x "__pycache__/*" "*.pyc"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
@@ -57,7 +46,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-          path: ./artifacts # 아티팩트를 명시적 경로에 다운로드
+          path: ./artifacts
 
       - name: Unzip artifact for deployment
         run: |
@@ -75,4 +64,4 @@ jobs:
         with:
           app-name: "AIFAKER"
           slot-name: "Production"
-          package: ./deploy_dir # unzip된 디렉토리를 명확히 지정
+          package: ./deploy_dir
