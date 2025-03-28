@@ -29,10 +29,10 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Zip artifact for deployment (including venv)
+      - name: Zip artifact for deployment (excluding venv)
         run: |
           cd insta/insta
-          zip -r ../../release.zip *
+          zip -r ../../release.zip . -x "antenv/*" "__pycache__/*" "*.pyc" "*.pyo" "*.pyd" ".Python" "pip-selfcheck.json"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
