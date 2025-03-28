@@ -49,7 +49,6 @@ def get_face_mask(pil_img):
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
     if len(faces) == 0:
         return mask
-
     # 첫 번째 얼굴의 영역만 직사각형 마스크로 생성
     for x, y, w, h in faces:
         cv2.rectangle(mask, (x, y), (x + w, y + h), 255, thickness=-1)
