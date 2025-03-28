@@ -64,9 +64,16 @@ def current_time():
     hh = hh % 12 or 12
     return f"{apm} {hh}:{mm:02d}"
 
-def upload_to_blob(file_data, filename, container_client=None):
+def upload_to_blob(file_data, filename, container_client=None, user_id=None, post_id=None):
     if container_client is None:
         container_client = blob_container_client
+    
+    # 파일명에 사용자 ID와 게시물 ID 포함
+    if user_id and post_id:
+        filename = f"{user_id}/{post_id}/{filename}"
+    elif user_id:
+        filename = f"{user_id}/{filename}"
+    
     blob_client = container_client.get_blob_client(filename)
     blob_client.upload_blob(file_data, overwrite=True)
     
@@ -111,6 +118,7 @@ def get_posts():
     return list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
 
 def save_post(post_data):
+    post_data['created_at'] = datetime.now().isoformat()
     cosmos_container.create_item(body=post_data)
 
 # 채팅 관련 함수
@@ -125,16 +133,19 @@ def save_chat_message(message_data):
 def load_users():
     query = "SELECT * FROM c"
     items = list(cosmos_users_container.query_items(query=query, enable_cross_partition_query=True))
-    return {item['username']: item['password'] for item in items}
+    return {item['username']: item for item in items}
 
 def save_user(username, password):
+    user_id = generate_unique_id()
     user_data = {
-        'id': username,
+        'id': user_id,
         'username': username,
         'password': password,
-        'created_at': datetime.now().isoformat()
+        'created_at': datetime.now().isoformat(),
+        'role': 'user'  # 사용자 역할 추가
     }
     cosmos_users_container.create_item(body=user_data)
+    return user_id
 
 # 라우트
 @app.route('/')
@@ -158,36 +169,56 @@ def post(post_id):
         return render_template('post.html', post=post)
     return "게시물을 찾을 수 없습니다.", 404
 
+@app.route('/write')
+def write():
+    return render_template('write.html')
+
 @app.route('/create_post', methods=['POST'])
 def create_post():
     title = request.form["title"]
     content = request.form["content"]
     image = request.files["image"]
+    password = request.form.get("password", "")  # 삭제용 비밀번호
+    
+    # 익명 사용자 정보 생성
+    anonymous_id = generate_unique_id()
+    
+    post_id = generate_unique_id()
     
     if image:
         filename = secure_filename(image.filename)
-        image_url = upload_to_blob(image, filename)
+        image_url = upload_to_blob(image, filename, user_id=anonymous_id, post_id=post_id)
     else:
         image_url = None
         
     post_data = {
-        'id': generate_unique_id(),
+        'id': post_id,
+        'user_id': anonymous_id,
+        'username': '익명',
         'title': title,
         'content': content,
         'image_url': image_url,
-        'date': datetime.now().isoformat()
+        'date': datetime.now().isoformat(),
+        'password': password  # 삭제용 비밀번호 저장
     }
     
     save_post(post_data)
     return redirect(url_for("blog"))
 
-@app.route('/delete/<string:post_id>', methods=['DELETE'])
+@app.route('/delete/<string:post_id>', methods=['POST'])
 def delete_post(post_id):
+    password = request.form.get("password", "")
+    
     query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
     posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
     if posts:
-        cosmos_container.delete_item(item=posts[0], partition_key=posts[0]['id'])
-    return jsonify({'success': True})
+        post = posts[0]
+        if post.get('password') == password:
+            cosmos_container.delete_item(item=post, partition_key=post['id'])
+            return jsonify({'success': True})
+        else:
+            return "비밀번호가 일치하지 않습니다.", 403
+    return "게시물을 찾을 수 없습니다.", 404
 
 @app.route('/apply_filter', methods=['POST'])
 def apply_filter():
@@ -199,15 +230,22 @@ def apply_filter():
     if file.filename == "":
         return "파일이 선택되지 않았습니다.", 400
 
+    # 사용자 정보 가져오기
+    users = load_users()
+    user = users.get(session["username"])
+    if not user:
+        return "사용자를 찾을 수 없습니다.", 404
+
     file_data = file.read()
     processed_image_data = protect_image(file_data)
     
     filename = secure_filename(file.filename)
     processed_filename = f"processed_{filename}"
-    image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client)
+    image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
     
     message_data = {
         'id': generate_unique_id(),
+        'user_id': user['id'],
         'username': session["username"],
         'content': image_url,
         'type': 'image',
@@ -239,7 +277,7 @@ def login():
         username = request.form["username"]
         password = request.form["password"]
         users = load_users()
-        if username in users and users[username] == password:
+        if username in users and users[username]['password'] == password:
             session["username"] = username
             return redirect(url_for("chat"))
         return render_template("login.html", error="잘못된 ID 또는 비밀번호입니다.")
@@ -268,11 +306,19 @@ def chat():
 def send_message():
     if "username" not in session:
         return "로그인이 필요합니다.", 401
+        
+    # 사용자 정보 가져오기
+    users = load_users()
+    user = users.get(session["username"])
+    if not user:
+        return "사용자를 찾을 수 없습니다.", 404
+        
     message = request.form["message"]
     sender_class = request.form["sender_class"]
     
     message_data = {
         'id': generate_unique_id(),
+        'user_id': user['id'],
         'username': session["username"],
         'content': message,
         'type': 'text',
