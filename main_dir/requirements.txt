@@ -1,8 +1,7 @@
 Flask
 gunicorn
 werkzeug
-opencv-python
-opencv-contrib-python
+opencv-python-headless
 torch
 numpy
 pillow
