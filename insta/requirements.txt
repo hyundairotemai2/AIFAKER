@@ -1,10 +1,11 @@
 Flask
 gunicorn
 werkzeug
-opencv-python
-opencv-contrib-python
-torch
+opencv-python-headless
 numpy
 pillow
+torch
 torchvision
 diffusers
+flask_socketio
+alive_progress

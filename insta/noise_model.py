@@ -30,32 +30,15 @@ def apply_ddpm_noise(image_tensor, noise_level):
     return torch.clamp(noisy_image, 0, 1)
 
 
-# 얼굴 검출을 위한 Haar Cascade와 Facemark LBF 초기화
+# Haar Cascade 얼굴 검출기 초기화
 haar_model_path = cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 face_cascade = cv2.CascadeClassifier(haar_model_path)
 
-# OpenCV Facemark LBF 초기화 (opencv-contrib-python 필요)
-# 현재 파일(noisemodel.py)의 절대 경로를 구합니다.
-current_dir = os.path.dirname(os.path.abspath(__file__))
-print("현재 파일 경로:", current_dir)
-
-# lbfmodel.yaml은 같은 디렉토리에 있음
-lbf_model_path = os.path.join(current_dir, "lbfmodel.yaml")
-
-# 존재 여부 확인
-if not os.path.exists(lbf_model_path):
-    raise FileNotFoundError(f"lbfmodel.yaml 파일을 찾을 수 없습니다: {lbf_model_path}")
-
-print("lbfmodel.yaml 파일의 절대 경로:", lbf_model_path)
-
-# 모델 로딩
-facemark = cv2.face.createFacemarkLBF()
-facemark.loadModel(lbf_model_path)
 
 def get_face_mask(pil_img):
     """
-    OpenCV의 얼굴 검출기와 Facemark LBF를 사용하여 얼굴 랜드마크를 추출하고,
-    얼굴 윤곽(예: 68개 랜드마크, 인덱스 0~68)에 해당하는 부분의 convex hull을 생성하여 마스크로 만듭니다.
+    Haar Cascade를 사용하여 얼굴 영역을 검출하고,
+    해당 영역의 직사각형 마스크를 생성합니다.
     """
     img_np = np.array(pil_img)
     gray = cv2.cvtColor(img_np, cv2.COLOR_RGB2GRAY)
@@ -66,18 +49,10 @@ def get_face_mask(pil_img):
     faces = face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
     if len(faces) == 0:
         return mask
-
-    # Facemark LBF로 얼굴 랜드마크 추출
-    ok, landmarks = facemark.fit(gray, faces)
-    if not ok or len(landmarks) == 0:
-        return mask
-
-    # 첫 번째 얼굴의 랜드마크 사용 (얼굴 전체 영역: 인덱스 0~68)
-    for landmark in landmarks:
-        face_contour = landmark[0][0:68].astype(np.int32)
-        hull = cv2.convexHull(face_contour)
-        cv2.fillConvexPoly(mask, hull, 255)
-        break  # 첫 얼굴만 처리
+    # 첫 번째 얼굴의 영역만 직사각형 마스크로 생성
+    for x, y, w, h in faces:
+        cv2.rectangle(mask, (x, y), (x + w, y + h), 255, thickness=-1)
+        break
     return mask
 
 
@@ -113,40 +88,3 @@ def noise_model(image_path, noise_level, model_name="DDPM"):
         )
         result_img = transforms.ToPILImage()(composite_tensor.squeeze(0).cpu())
     return result_img
-
-
-# ==============================
-# 테스트 코드 (웹 연결 없이 단독 실행)
-# ==============================
-"""
-if __name__ == "__main__":
-    # 테스트를 위한 입력 이미지 경로 (test.jpg)
-    test_image_path = "input/004.jpg"
-
-    # 테스트 이미지가 없으면 간단한 이미지 생성
-    if not os.path.exists(test_image_path):
-        test_img = Image.new("RGB", (256, 256), color=(200, 200, 200))
-        test_img.save(test_image_path)
-        print(f"테스트 이미지를 생성했습니다: {test_image_path}")
-
-    # DDPM 기반 얼굴 보호 적용
-    noise_level = 0.05  # 예시 노이즈 레벨
-    result_ddpm_face = noise_model(test_image_path, noise_level, model_name="DDPM")
-
-    # 원본 이미지 로드
-    original = Image.open(test_image_path).convert("RGB")
-
-    # 결과 이미지 출력 (원본, DDPM 얼굴 보호)
-    fig, axes = plt.subplots(1, 2, figsize=(10, 5))
-    axes[0].imshow(original)
-    axes[0].set_title("원본 이미지")
-    axes[0].axis("off")
-
-    axes[1].imshow(result_ddpm_face)
-    axes[1].set_title("DDPM 얼굴 보호")
-    axes[1].axis("off")
-
-    plt.tight_layout()
-    plt.show()
-
-"""
