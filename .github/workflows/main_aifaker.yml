@@ -23,7 +23,7 @@ jobs:
       - name: Set up virtual environment and install dependencies
         run: |
           set -e
-          cd insta
+          cd inst a
           python -m venv venv
           echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/insta/venv" >> $GITHUB_ENV
           echo "$GITHUB_WORKSPACE/insta/venv/bin" >> $GITHUB_PATH
