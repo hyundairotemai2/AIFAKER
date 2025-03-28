@@ -37,7 +37,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   <div class="w3-container w3-white w3-margin w3-padding">
     <div class="image-container">
       {% if post.image_url %}
-        <img src="{{ post.image_url }}" style="width:100%; max-width:600px">
+        <img src="{{ post.filtered_image_url if post.apply_filter and post.filtered_image_url else post.image_url }}" style="width:100%; max-width:600px">
       {% endif %}
     </div>
     

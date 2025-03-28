@@ -9,34 +9,9 @@
 <style>
 body, h1, h2, h3, h4, h5 { font-family: "Raleway", sans-serif; }
 #preview { width: 100%; max-height: 400px; object-fit: cover; margin-top: 20px; }
-/* 로딩 오버레이 스타일 */
-#loadingOverlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 1000;
-  justify-content: center;
-  align-items: center;
-}
-#loadingText {
-  color: white;
-  font-size: 24px;
-  background: #333;
-  padding: 20px;
-  border-radius: 5px;
-}
 </style>
 </head>
 <body class="w3-light-grey">
-
-<!-- 로딩 오버레이 추가 -->
-<div id="loadingOverlay">
-  <div id="loadingText">로딩 중...</div>
-</div>
 
 <div class="w3-content" style="max-width:1400px">
 
@@ -56,7 +31,7 @@ body, h1, h2, h3, h4, h5 { font-family: "Raleway", sans-serif; }
       <label for="image"><b>이미지 업로드</b></label>
       <input class="w3-input w3-border w3-margin-bottom" type="file" id="image" name="image" accept="image/*" onchange="previewImage(event)">
       <img id="preview" style="display:none;">
-      <input type="hidden" id="apply_filter" name="apply_filter" value="no"> <!-- 필터 적용 여부 -->
+      <input type="hidden" id="apply_filter" name="apply_filter" value="no">
 
       <button class="w3-button w3-green w3-margin-top" type="submit" onclick="return confirmFilter()">글 작성하기</button>
       <a href="/" class="w3-button w3-dark-grey w3-margin-top">취소</a>
@@ -85,18 +60,8 @@ function confirmFilter() {
   const image = document.getElementById('image').files[0];
   if (image && confirm('필터를 적용하시겠습니까?')) {
     document.getElementById('apply_filter').value = 'yes'; // 필터 적용 요청
-    showLoading(); // 로딩 오버레이 표시
-    setTimeout(() => {
-      document.getElementById('postForm').submit(); // 2초 후 제출
-    }, 2000);
-    return false; // 즉시 제출 방지
   }
-  return true; // 필터 미적용 시 바로 제출
-}
-
-function showLoading() {
-  const overlay = document.getElementById('loadingOverlay');
-  overlay.style.display = 'flex'; // 로딩 오버레이 표시
+  return true; // 바로 제출
 }
 </script>
 
