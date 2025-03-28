@@ -168,6 +168,7 @@ def create_post():
                     'image_url': image_url,
                     'filtered_image_url': f'/static/uploads/{filtered_filename}',
                     'apply_filter': True,
+                    'filter_applied': False,  # 처음에는 로딩 필요
                     'date': date
                 })
             else:
@@ -177,6 +178,7 @@ def create_post():
                     'content': content,
                     'image_url': image_url,
                     'apply_filter': False,
+                    'filter_applied': False,
                     'date': date
                 })
     else:
@@ -186,10 +188,20 @@ def create_post():
             'content': content,
             'image_url': image_url,
             'apply_filter': False,
+            'filter_applied': False,
             'date': date
         })
 
     return redirect('/blog')
+
+# 새 엔드포인트: 필터 적용 완료 표시
+@app.route('/mark_filter_applied/<int:post_id>', methods=['POST'])
+def mark_filter_applied(post_id):
+    for post in posts:
+        if post['id'] == post_id:
+            post['filter_applied'] = True
+            break
+    return jsonify({'success': True})
 
 @app.route('/delete/<int:post_id>', methods=['DELETE'])
 def delete_post(post_id):
