@@ -57,10 +57,10 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: python-app
-          path: ./ # 명시적으로 현재 디렉토리에 다운로드
+          path: ./
 
       - name: Unzip artifact for deployment
-        run: unzip release.zip -d deploy_dir # 출력 디렉토리 명시
+        run: unzip release.zip -d deploy_dir
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -73,4 +73,4 @@ jobs:
         with:
           app-name: "AIFAKER"
           slot-name: "Production"
-          package: ./deploy_dir # unzip된 디렉토리 사용
+          package: ./deploy_dir
