@@ -132,7 +132,9 @@ def post(post_id):
     if post_data is None:
         return "글을 찾을 수 없습니다.", 404
     post_data['date_str'] = post_data['date'].strftime('%Y-%m-%d %H:%M:%S')
-    return render_template('post_detail.html', post=post_data)
+    # 댓글 데이터 추가 (기본적으로 빈 리스트로 설정하거나 실제 댓글 데이터를 가져와야 함)
+    comments = []  # 실제 구현 시 댓글 데이터를 여기에 추가
+    return render_template('post_detail.html', post=post_data, comments=comments)
 
 @app.route('/write')
 def write():
@@ -142,7 +144,7 @@ def write():
 def create_post():
     title = request.form['title']
     content = request.form['content']
-    apply_filter = request.form.get('apply_filter', 'no')  # 필터 적용 여부
+    apply_filter = request.form.get('apply_filter', 'no')
     image_url = ''
     date = datetime.now()
 
@@ -152,25 +154,41 @@ def create_post():
             filename = secure_filename(image.filename)
             image_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             image.save(image_path)
-            
+            image_url = f'/static/uploads/{filename}'
+
             if apply_filter == 'yes':
-                # 흑백 필터 적용
-                img = Image.open(image_path).convert('L')  # 흑백 변환
+                img = Image.open(image_path).convert('L')
                 filtered_filename = f"filtered_{filename}"
                 filtered_image_path = os.path.join(app.config['UPLOAD_FOLDER'], filtered_filename)
                 img.save(filtered_image_path)
-                image_url = f'/static/uploads/{filtered_filename}'
+                posts.append({
+                    'id': max(post['id'] for post in posts) + 1 if posts else 1,
+                    'title': title,
+                    'content': content,
+                    'image_url': image_url,
+                    'filtered_image_url': f'/static/uploads/{filtered_filename}',
+                    'apply_filter': True,
+                    'date': date
+                })
             else:
-                image_url = f'/static/uploads/{filename}'
+                posts.append({
+                    'id': max(post['id'] for post in posts) + 1 if posts else 1,
+                    'title': title,
+                    'content': content,
+                    'image_url': image_url,
+                    'apply_filter': False,
+                    'date': date
+                })
+    else:
+        posts.append({
+            'id': max(post['id'] for post in posts) + 1 if posts else 1,
+            'title': title,
+            'content': content,
+            'image_url': image_url,
+            'apply_filter': False,
+            'date': date
+        })
 
-    new_id = max(post['id'] for post in posts) + 1 if posts else 1
-    posts.append({
-        'id': new_id,
-        'title': title,
-        'content': content,
-        'image_url': image_url,
-        'date': date
-    })
     return redirect('/blog')
 
 @app.route('/delete/<int:post_id>', methods=['DELETE'])

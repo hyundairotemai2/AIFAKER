@@ -8,6 +8,21 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
+.image-container { position: relative; display: inline-block; width: 100%; }
+.post-image { width: 100%; }
+.loading-overlay {
+  display: none;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-size: 20px;
+}
 </style>
 </head>
 <body class="w3-light-grey">
@@ -26,7 +41,10 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       {% for post in posts %}
       <div class="w3-card-4 w3-margin w3-white">
         {% if post.image_url %}
-          <img src="{{ post.image_url }}" style="width:100%">
+          <div class="image-container">
+            <img src="{{ post.image_url }}" class="post-image" data-filtered="{{ post.filtered_image_url if post.apply_filter else '' }}" data-apply-filter="{{ 'true' if post.apply_filter else 'false' }}">
+            <div class="loading-overlay">로딩 중...</div>
+          </div>
         {% endif %}
         <div class="w3-container">
           <h3><b>{{ post.title }}</b></h3>
@@ -47,7 +65,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card w3-margin w3-margin-top">
         <img src="/static/images/shiba.jpg" style="width:100%">
         <div class="w3-container w3-white">
-          <div class = "sticky">
+          <div class="sticky">
             <h4><b>내 소개</b></h4>
             <p>안녕하세요, 제 블로그에 오신걸 환영합니다!</p>
           </div>        
@@ -74,6 +92,22 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 </div>
 
 <footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top"></footer>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+  const images = document.querySelectorAll('.post-image');
+  images.forEach(img => {
+    if (img.getAttribute('data-apply-filter') === 'true') {
+      const overlay = img.parentElement.querySelector('.loading-overlay');
+      overlay.style.display = 'flex'; // 이미지 위에 로딩 오버레이 표시
+      setTimeout(() => {
+        img.src = img.getAttribute('data-filtered'); // 2초 후 필터링된 이미지로 변경
+        overlay.style.display = 'none'; // 오버레이 숨김
+      }, 2000);
+    }
+  });
+});
+</script>
 
 </body>
 </html>
