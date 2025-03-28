@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="https://www.w3schools.com/w3css/4/w3.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0;
+            overflow: hidden;
+        }
+        .container {
+            max-width: 900px;
+            text-align: center;
+            background: white;
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            position: relative;
+            z-index: 1;
+        }
+        .header {
+            background: #4CAF50;
+            color: white;
+            padding: 30px;
+            border-radius: 10px 10px 0 0;
+            margin: -40px -40px 30px -40px;
+        }
+        h1 {
+            font-weight: 700;
+            font-size: 2.8em;
+            margin: 0;
+            text-shadow: 1px 1px 3px rgba(0, 0, 0, 0.2);
+        }
+        p {
+            font-size: 1.3em;
+            margin: 10px 0 0;
+            color: #f0f0f0;
+        }
+        .button-container {
+            margin-top: 40px;
+        }
+        .w3-button {
+            padding: 15px 40px;
+            font-size: 1.2em;
+            border-radius: 25px;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            cursor: pointer;
+            color: white;
+            border: none;
+        }
+        .w3-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        .w3-blue {
+            background: #2196F3 !important; /* 기본 파란색 */
+        }
+        .w3-blue:hover {
+            background: #FFC107 !important; /* 호버 시 노란색 */
+        }
+        .w3-teal {
+            background: #2196F3 !important; /* 기본 파란색 (통일) */
+        }
+        .w3-teal:hover {
+            background: #4CAF50 !important; /* 호버 시 초록색 */
+        }
+        footer {
+            margin-top: 40px;
+            color: #000 !important;
+            font-size: 0.9em;
+        }
+        footer p {
+            color: #000 !important;
+        }
+        #kakao-image {
+            position: absolute;
+            left: 220px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+        #blog-image {
+            position: absolute;
+            right: 220px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 400px;
+            height: auto;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header class="header w3-container">
+        <h1>Welcome!</h1>
+        <p>원하는 페이지로 이동하세요.</p>
+    </header>
+
+    <div class="button-container">
+        <button class="w3-button w3-blue w3-margin" id="kakao-btn" onclick="window.location.href='/login'">카카오톡</button>
+        <button class="w3-button w3-teal w3-margin" id="blog-btn" onclick="window.location.href='/blog'">블로그</button>
+    </div>
+
+    <footer class="w3-center">
+        <p>© 2025 Ai faker Project</p>
+    </footer>
+</div>
+
+<img id="kakao-image" src="/static/images/talk.png" alt="KakaoTalk Hover Image">
+<img id="blog-image" src="/static/images/blog.png" alt="Blog Hover Image">
+
+<script>
+    const kakaoBtn = document.getElementById('kakao-btn');
+    const blogBtn = document.getElementById('blog-btn');
+    const kakaoImage = document.getElementById('kakao-image');
+    const blogImage = document.getElementById('blog-image');
+
+    kakaoBtn.addEventListener('mouseover', () => {
+        kakaoImage.style.opacity = '0.5';
+    });
+    kakaoBtn.addEventListener('mouseout', () => {
+        kakaoImage.style.opacity = '0';
+    });
+
+    blogBtn.addEventListener('mouseover', () => {
+        blogImage.style.opacity = '0.5';
+    });
+    blogBtn.addEventListener('mouseout', () => {
+        blogImage.style.opacity = '0';
+    });
+</script>
+
+</body>
+</html>

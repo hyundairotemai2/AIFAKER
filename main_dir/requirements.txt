@@ -1,0 +1,12 @@
+Flask
+gunicorn
+werkzeug
+opencv-python
+opencv-contrib-python
+torch
+numpy
+pillow
+torchvision
+diffusers
+matplotlib
+azure-cosmos
