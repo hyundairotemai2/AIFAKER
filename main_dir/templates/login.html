@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='login_chat.css') }}">
+</head>
+<body>
+<form method="POST">
+    <table>
+        <tr>
+            <td><h2>로그인</h2></td>
+        </tr>
+        <tr>
+            <td><input type="text" name="username" placeholder="ID" required></td>
+        </tr>
+        <tr>
+            <td><input type="password" name="password" placeholder="Password" required></td>
+        </tr>
+        <tr>
+            <td><input type="checkbox"> 로그인 정보 저장</td>
+        </tr>
+        <tr>
+            <td><input type="submit" value="Sign in" class="btn"></td>
+        </tr>
+        <tr>
+            <td class="join"><a href="{{ url_for('join') }}">회원가입</a></td>
+        </tr>
+        {% if error %}
+        <tr>
+            <td style="color: red;">{{ error }}</td>
+        </tr>
+        {% endif %}
+    </table>
+</form>
+</body>
+</html>
