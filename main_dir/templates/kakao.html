@@ -134,8 +134,8 @@
                     {% if msg.type == 'text' %}
                     <p class="msg">{{ msg.content }}</p>
                     {% elif msg.type == 'image' %}
-                    <img src="{{ url_for('serve_output', filename=msg.content) }}">
-                    <button class="download-btn" onclick="downloadImage('{{ url_for('serve_output', filename=msg.content) }}')">다운로드</button>
+                    <img src="{{ msg.content }}">
+                    <button class="download-btn" onclick="downloadImage('{{ msg.content }}')">다운로드</button>
                     {% endif %}
                     <span class="time">{{ msg.time }}</span>
                 </div>
@@ -203,7 +203,6 @@
                 }
             });
 
-            setInterval(loadMessages, 1000);
             loadMessages();
         });
 
@@ -242,6 +241,43 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
+        }
+
+        function applyFilter() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('이미지를 선택해주세요.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/apply_filter', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 이미지 URL을 직접 사용하여 메시지 추가
+                    const messageHtml = `
+                        <div class="message mymsg">
+                            <div class="message-content">
+                                <img src="${data.image_url}" alt="처리된 이미지" style="max-width: 200px;">
+                            </div>
+                            <div class="message-time">${currentTime()}</div>
+                        </div>
+                    `;
+                    document.querySelector('.chat-messages').insertAdjacentHTML('beforeend', messageHtml);
+                    fileInput.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('이미지 처리 중 오류가 발생했습니다.');
+            });
         }
     </script>
 </body>
