@@ -7,8 +7,8 @@ from werkzeug.utils import secure_filename
 from datetime import datetime
 from PIL import Image
 import torchvision.transforms as transforms
-import matplotlib.font_manager as fm
-import matplotlib.pyplot as plt
+#  import matplotlib.font_manager as fm
+#  import matplotlib.pyplot as plt
 import sys
 
 # UTF-8 인코딩 강제 설정
@@ -46,17 +46,17 @@ posts = [
     },
 ]
 
-# 한글 폰트 설정
-def set_korean_font():
-    font_candidates = ["NanumGothic", "Malgun Gothic", "AppleGothic"]
-    for font in fm.findSystemFonts():
-        font_name = fm.FontProperties(fname=font).get_name()
-        if font_name in font_candidates:
-            plt.rc("font", family=font_name)
-            print(f"✅ 한글 폰트 적용: {font_name}")
-            return
-    print("[경고] 한글 폰트를 찾을 수 없습니다. 기본 폰트 사용.")
-set_korean_font()
+# # 한글 폰트 설정
+# def set_korean_font():
+#     font_candidates = ["NanumGothic", "Malgun Gothic", "AppleGothic"]
+#     for font in fm.findSystemFonts():
+#         font_name = fm.FontProperties(fname=font).get_name()
+#         if font_name in font_candidates:
+#             plt.rc("font", family=font_name)
+#             print(f"✅ 한글 폰트 적용: {font_name}")
+#             return
+#     print("[경고] 한글 폰트를 찾을 수 없습니다. 기본 폰트 사용.")
+# set_korean_font()
 
 # 블로그 관련 함수
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
