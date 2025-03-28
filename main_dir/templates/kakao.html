@@ -7,21 +7,122 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css"/>
     <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
     <style>
-        .chat_wrap { border:1px solid #999; width:375px; padding:5px; font-size:13px; color:#333; margin: auto; }
-        .chat_wrap .inner { background-color:#acc2d2; border-radius:5px; padding:10px; overflow-y:scroll; height: 600px; display: flex; flex-direction: column; align-items: center; }
-        .chat_wrap .item { margin-top:15px; display: flex; width: 100%; justify-content: center; }
-        .chat_wrap .item.mymsg { justify-content: flex-end; }
-        .chat_wrap .item.yourmsg { justify-content: flex-start; }
-        .chat_wrap .item .box { display:inline-block; max-width:250px; position:relative; text-align: left; }
-        .chat_wrap .item .box .msg { background:#fff; border-radius:10px; padding:8px; word-break: break-word; }
-        .chat_wrap .item.mymsg .box .msg { background:#fee600; }
-        .chat_wrap .item .box .time { font-size:11px; color:#999; display: block; text-align: right; margin-top: 3px; }
-        input[type="text"], input[type="file"] { width:100%; background:#ddd; border-radius:5px; height:30px; padding-left:5px; margin-top:5px }
-        .chat_wrap .item .box img { max-width: 160px; border-radius: 10px; filter: grayscale(100%); }
-        .logout { text-align: center; margin-top: 10px; }
-        .logout a { color: #007bff; text-decoration: none; }
-        .download-btn { margin-top: 5px; padding: 5px; background-color: #fee600; color: rgb(0, 0, 0); border: none; border-radius: 5px; cursor: pointer; width: 60%; text-align: center; font-size: 11px; }
-        .download-btn:hover { background-color: #fee600; }
+        body {
+            background-color: #fae100; /* 카카오톡 노란색 배경 */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .chat_wrap {
+            background-color: #ffffff;
+            width: 400px;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+        }
+        .chat_wrap .inner {
+            background-color: #d6eaf8; /* 연한 하늘색 */
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: scroll;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat_wrap .item {
+            margin-top: 15px;
+            display: flex;
+            width: 100%;
+            justify-content: center;
+        }
+        .chat_wrap .item.mymsg {
+            justify-content: flex-end;
+        }
+        .chat_wrap .item.yourmsg {
+            justify-content: flex-start;
+        }
+        .chat_wrap .item .box {
+            display: inline-block;
+            max-width: 280px;
+            position: relative;
+            text-align: left;
+        }
+        .chat_wrap .item .box .msg {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 10px 15px;
+            word-break: break-word;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .chat_wrap .item.mymsg .box .msg {
+            background: #fee600; /* 카카오톡 노란색 메시지 */
+            color: #3c1e1e; /* 갈색 텍스트 */
+        }
+        .chat_wrap .item .box .time {
+            font-size: 11px;
+            color: #666;
+            display: block;
+            text-align: right;
+            margin-top: 5px;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #f8f8f8;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: #3c1e1e;
+            outline: none;
+        }
+        .chat_wrap .item .box img {
+            max-width: 180px;
+            border-radius: 12px;
+            filter: grayscale(100%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logout {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .logout a {
+            color: #3c1e1e; /* 갈색으로 변경 */
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .logout a:hover {
+            background-color: #e9ecef;
+        }
+        .download-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background-color: #3c1e1e; /* 카카오톡 갈색 */
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #2e1717; /* 더 어두운 갈색 */
+        }
     </style>
 </head>
 <body>
@@ -44,7 +145,7 @@
         <input type="text" class="mymsg" placeholder="내 메시지 입력">
         <input type="text" class="yourmsg" placeholder="상대방 메시지 입력">
         <input type="file" id="imageUpload" accept="image/*">
-        <div class="logout"><a href="{{ url_for('logout') }}">로그아웃</a></div>
+        <div class="logout"><a href="{{ url_for('login') }}">로그아웃</a></div>
     </div>
     <script>
         $(function(){
