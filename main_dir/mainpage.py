@@ -10,6 +10,7 @@ from PIL import Image
 import torchvision.transforms as transforms
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from azure.cosmos import CosmosClient
+from azure.core import exceptions
 from dotenv import load_dotenv
 import sys
 
@@ -334,6 +335,35 @@ def delete_post(post_id):
     if posts:
         post = posts[0]
         if post.get('password') == password:
+            # Blob Storage에서 이미지 삭제
+            try:
+                if post.get('image_url'):
+                    # URL에서 blob 이름 추출
+                    blob_name = post['image_url'].split('?')[0].split('/')[-1]
+                    if post.get('user_id'):
+                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
+                    blob_client = blob_container_client.get_blob_client(blob_name)
+                    blob_client.delete_blob()
+                
+                if post.get('original_image_url'):
+                    # 원본 이미지 삭제
+                    blob_name = post['original_image_url'].split('?')[0].split('/')[-1]
+                    if post.get('user_id'):
+                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
+                    blob_client = blob_container_client.get_blob_client(blob_name)
+                    blob_client.delete_blob()
+                
+                if post.get('filtered_image_url'):
+                    # 필터링된 이미지 삭제
+                    blob_name = post['filtered_image_url'].split('?')[0].split('/')[-1]
+                    if post.get('user_id'):
+                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
+                    blob_client = blob_container_client.get_blob_client(blob_name)
+                    blob_client.delete_blob()
+            except Exception as e:
+                print(f"Blob Storage 이미지 삭제 중 오류 발생: {str(e)}")
+            
+            # Cosmos DB에서 게시물 삭제
             cosmos_container.delete_item(item=post, partition_key=post['id'])
             return redirect(url_for("blog"))
         else:
