@@ -63,8 +63,9 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
           <div class="image-container">
             <img src="{{ post.image_url }}" 
                  class="post-image" 
-                 data-filtered="{{ post.image_url }}"
-                 data-apply-filter="{{ 'true' if post.is_filtered else 'false' }}"
+                 data-filtered="{{ post.filtered_image_url or post.image_url }}"
+                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}"
+                 data-filter-applied="{{ 'true' if post.filter_applied else 'false' }}"
                  alt="게시글 이미지">
             <div class="loading-overlay">로딩 중...</div>
           </div>
@@ -132,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
       setTimeout(() => {
         img.src = img.getAttribute('data-filtered'); // 필터링된 이미지로 변경
         overlay.style.display = 'none'; // 오버레이 숨김
-        const postId = img.closest('.w3-card-4').querySelector('button').getAttribute('onclick').match(/'([^']+)'/)[1];
+        const postId = img.closest('.w3-card-4').querySelector('a').getAttribute('href').match(/post\/([^\/]+)/)[1];
         fetch('/mark_filter_applied/' + postId, {
           method: 'POST',
           headers: {

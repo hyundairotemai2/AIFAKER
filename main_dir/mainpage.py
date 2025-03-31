@@ -139,12 +139,10 @@ def protect_image(image_data):
 
 # PGD 기반 이미지 처리 함수
 def protect_image_pgd(image_data):
-    # 바이트 데이터를 임시 파일로 저장
     temp_filename = f"temp_{generate_unique_id()}.png"
     with open(temp_filename, "wb") as f:
         f.write(image_data)
     
-    # PGD 공격 수행
     result_img = pgdmodel_attack_on_image(
         image_path=temp_filename,
         nets=PGD_NETS,
@@ -155,13 +153,9 @@ def protect_image_pgd(image_data):
         num_iter=5,
     )
     
-    # 결과 이미지를 바이트 스트림으로 변환
     buffered = io.BytesIO()
     result_img.save(buffered, format="PNG")
-    
-    # 임시 파일 삭제
     os.remove(temp_filename)
-    
     return buffered.getvalue()
 
 # 블로그 관련 함수
@@ -208,7 +202,6 @@ def main():
 def blog():
     posts = get_posts()
     for post in posts:
-        # 날짜 처리
         if 'date' in post:
             try:
                 post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
@@ -216,17 +209,19 @@ def blog():
                 post['date'] = '날짜 없음'
         else:
             post['date'] = '날짜 없음'
-            
-        # 각 게시글의 댓글 수 가져오기
+        
+        post['apply_filter'] = post.get('apply_filter', False)
+        post['filter_applied'] = post.get('filter_applied', True)
+        
+        if post['apply_filter'] and post['filter_applied']:
+            post['image_url'] = post.get('filtered_image_url') or post.get('image_url')
+        else:
+            post['image_url'] = post.get('original_image_url') or post.get('image_url')
+
         comments_query = f"SELECT VALUE COUNT(1) FROM c WHERE c.post_id = '{post['id']}'"
         comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
         post['comment_count'] = comments[0] if comments else 0
-        
-        # 이미지 URL 설정
-        if post.get('is_filtered'):
-            post['image_url'] = post.get('image_url')  # 필터 처리된 이미지
-        else:
-            post['image_url'] = post.get('original_image_url')  # 원본 이미지
+
     return render_template('blog.html', posts=posts)
 
 @app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
@@ -236,6 +231,7 @@ def mark_filter_applied(post_id):
     if posts:
         post = posts[0]
         post['filter_applied'] = True
+        post['image_url'] = post.get('filtered_image_url') or post.get('image_url')
         cosmos_container.replace_item(item=post, body=post)
         return jsonify({'success': True})
     return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
@@ -246,7 +242,6 @@ def post(post_id):
     posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
     if posts:
         post = posts[0]
-        # 날짜 처리
         if 'date' in post:
             try:
                 post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
@@ -255,15 +250,16 @@ def post(post_id):
         else:
             post['date'] = '날짜 없음'
         
-        # 이미지 URL 설정
-        if post.get('is_filtered'):
-            post['display_image_url'] = post.get('image_url')  # 필터 처리된 이미지
-            post['original_image_url'] = post.get('original_image_url')  # 원본 이미지
+        post['apply_filter'] = post.get('apply_filter', False)
+        post['filter_applied'] = post.get('filter_applied', True)
+        
+        if post['apply_filter'] and post['filter_applied']:
+            post['display_image_url'] = post.get('filtered_image_url') or post.get('image_url')
+            post['original_image_url'] = post.get('original_image_url')
         else:
-            post['display_image_url'] = post.get('original_image_url')  # 원본 이미지
+            post['display_image_url'] = post.get('original_image_url') or post.get('image_url')
             post['original_image_url'] = None
-            
-        # 댓글 목록 가져오기
+
         comments_query = f"SELECT * FROM c WHERE c.post_id = '{post_id}' ORDER BY c.date DESC"
         comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
         for comment in comments:
@@ -274,7 +270,7 @@ def post(post_id):
                     comment['date_str'] = '날짜 없음'
             else:
                 comment['date_str'] = '날짜 없음'
-            
+        
         return render_template('post_detail.html', post=post, comments=comments)
     return "게시물을 찾을 수 없습니다.", 404
 
@@ -286,24 +282,31 @@ def write():
 def create_post():
     title = request.form["title"]
     content = request.form["content"]
-    image = request.files["image"]
+    image = request.files.get("image")
     password = request.form.get("password", "")
-    
+    apply_filter = request.form.get("apply_filter", "false") == "true"
+
     anonymous_id = generate_unique_id()
     post_id = generate_unique_id()
 
     image_url = None
+    original_image_url = None
     filtered_image_url = None
 
     if image:
         filename = secure_filename(image.filename)
         image_data = image.read()
-        # PGD 노이즈 적용 (선택적으로 변경 가능)
-        processed_image_data = protect_image_pgd(image_data)  # 또는 protect_image(image_data) 사용
-        image_url = upload_to_blob(processed_image_data, filename, user_id=anonymous_id, post_id=post_id)
-    else:
-        image_url = None
-        
+        original_image_url = upload_to_blob(image_data, filename, user_id=anonymous_id, post_id=post_id)
+
+        if apply_filter:
+            # PGD 필터 적용
+            filtered_image_data = protect_image_pgd(image_data)
+            filtered_filename = f"pgd_filtered_{filename}"
+            filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
+            image_url = filtered_image_url
+        else:
+            image_url = original_image_url
+
     post_data = {
         'id': post_id,
         'user_id': anonymous_id,
@@ -311,18 +314,16 @@ def create_post():
         'title': title,
         'content': content,
         'image_url': image_url,
+        'original_image_url': original_image_url if image else None,
+        'filtered_image_url': filtered_image_url if apply_filter else None,
+        'apply_filter': apply_filter,
+        'filter_applied': False if apply_filter else True,
         'date': datetime.now().isoformat(),
         'password': password
     }
 
     save_post(post_data)
     return redirect(url_for("blog"))
-
-def apply_grayscale_filter(image_data):
-    img = Image.open(io.BytesIO(image_data)).convert("L")  # 흑백 변환
-    buffered = io.BytesIO()
-    img.save(buffered, format="PNG")
-    return buffered.getvalue()
 
 @app.route('/delete/<string:post_id>', methods=['POST'])
 def delete_post(post_id):
@@ -355,10 +356,8 @@ def apply_filter():
         return "사용자를 찾을 수 없습니다.", 404
 
     file_data = file.read()
-    processed_image_data = protect_image(file_data)  # 기존 SGN 노이즈
-    
-    # 필터 적용된 이미지 저장
     processed_image_data = protect_image(file_data)
+    
     processed_filename = f"processed_{secure_filename(file.filename)}"
     processed_image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
     
@@ -371,7 +370,7 @@ def apply_filter():
         'sender_class': 'mymsg',
         'time': current_time(),
         'is_filtered': True,
-        'original_image_url': original_image_url
+        'original_image_url': processed_image_url  # 원본 대신 처리된 URL 사용 (필요 시 수정)
     }
     
     save_chat_message(message_data)
@@ -384,7 +383,6 @@ def add_comment(post_id):
     if not content:
         return jsonify({"success": False, "message": "댓글 내용이 없습니다."}), 400
         
-    # 익명 사용자 정보 생성
     anonymous_id = generate_unique_id()
     
     comment_data = {
@@ -416,7 +414,7 @@ def apply_filter_pgd():
         return "사용자를 찾을 수 없습니다.", 404
 
     file_data = file.read()
-    processed_image_data = protect_image_pgd(file_data)  # PGD 노이즈 적용
+    processed_image_data = protect_image_pgd(file_data)
     
     filename = secure_filename(file.filename)
     processed_filename = f"pgd_processed_{filename}"
@@ -444,7 +442,7 @@ def apply_filter_blog():
     try:
         header, encoded = data['image'].split(',', 1)
         image_data = base64.b64decode(encoded)
-        processed_image_data = protect_image(image_data)  # 기존 SGN 노이즈
+        processed_image_data = protect_image(image_data)
         processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
@@ -459,7 +457,7 @@ def apply_filter_pgd_blog():
     try:
         header, encoded = data['image'].split(',', 1)
         image_data = base64.b64decode(encoded)
-        processed_image_data = protect_image_pgd(image_data)  # PGD 노이즈
+        processed_image_data = protect_image_pgd(image_data)
         processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
@@ -473,7 +471,7 @@ def login():
         users = load_users()
         if username in users and users[username]['password'] == password:
             session["username"] = username
-            session["user_id"] = users[username]['id']  # user_id도 session에 저장
+            session["user_id"] = users[username]['id']
             return redirect(url_for("chat"))
         return render_template("login.html", error="잘못된 ID 또는 비밀번호입니다.")
     return render_template("login.html", error=None)
