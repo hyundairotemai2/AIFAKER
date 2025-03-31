@@ -179,20 +179,26 @@ def write():
 def create_post():
     title = request.form["title"]
     content = request.form["content"]
-    image = request.files["image"]
-    password = request.form.get("password", "")  # 삭제용 비밀번호
-    
-    # 익명 사용자 정보 생성
+    image = request.files.get("image")
+    password = request.form.get("password", "")
+    apply_filter = request.form.get("apply_filter", "false") == "true"  # 필터 적용 여부 추가
+
     anonymous_id = generate_unique_id()
-    
     post_id = generate_unique_id()
-    
+
+    image_url = None
+    filtered_image_url = None
+
     if image:
         filename = secure_filename(image.filename)
-        image_url = upload_to_blob(image, filename, user_id=anonymous_id, post_id=post_id)
-    else:
-        image_url = None
-        
+        image_data = image.read()
+        image_url = upload_to_blob(image_data, filename, user_id=anonymous_id, post_id=post_id)
+
+        if apply_filter:  # 필터 적용 로직 추가
+            filtered_image_data = apply_grayscale_filter(image_data)
+            filtered_filename = f"filtered_{filename}"
+            filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
+
     post_data = {
         'id': post_id,
         'user_id': anonymous_id,
@@ -200,12 +206,21 @@ def create_post():
         'title': title,
         'content': content,
         'image_url': image_url,
+        'filtered_image_url': filtered_image_url,  # 추가
+        'apply_filter': apply_filter,  # 추가
+        'filter_applied': False,  # 추가
         'date': datetime.now().isoformat(),
-        'password': password  # 삭제용 비밀번호 저장
+        'password': password
     }
-    
+
     save_post(post_data)
     return redirect(url_for("blog"))
+
+def apply_grayscale_filter(image_data):
+    img = Image.open(io.BytesIO(image_data)).convert("L")  # 흑백 변환
+    buffered = io.BytesIO()
+    img.save(buffered, format="PNG")
+    return buffered.getvalue()
 
 @app.route('/delete/<string:post_id>', methods=['POST'])
 def delete_post(post_id):
@@ -272,6 +287,17 @@ def apply_filter_blog():
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
+def mark_filter_applied(post_id):
+    query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
+    posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
+    if posts:
+        post = posts[0]
+        post['filter_applied'] = True
+        cosmos_container.replace_item(item=post, body=post)
+        return jsonify({'success': True})
+    return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
