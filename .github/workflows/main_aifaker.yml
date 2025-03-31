@@ -29,10 +29,10 @@ jobs:
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Zip artifact for deployment (including venv)
+      - name: Zip artifact for deployment (excluding venv)
         run: |
           cd main_dir
-          zip -r ../release.zip *
+          zip -r ../release.zip . -x "antenv/*" "antenv/**"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
