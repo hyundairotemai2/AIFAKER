@@ -12,6 +12,7 @@ from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPerm
 from azure.cosmos import CosmosClient
 from dotenv import load_dotenv
 import sys
+import azure.core.exceptions
 
 # .env 파일 로드
 load_dotenv()
@@ -29,6 +30,7 @@ COSMOS_KEY = os.getenv('COSMOS_KEY')
 COSMOS_DATABASE_NAME = os.getenv('COSMOS_DATABASE_NAME')
 COSMOS_CHAT_DATABASE_NAME = os.getenv('COSMOS_CHAT_DATABASE_NAME')
 COSMOS_POSTS_CONTAINER = "posts"
+COSMOS_COMMENTS_CONTAINER = "comments"
 COSMOS_MESSAGES_CONTAINER = os.getenv('COSMOS_MESSAGES_CONTAINER')
 COSMOS_USERS_CONTAINER = os.getenv('COSMOS_USERS_CONTAINER')
 
@@ -38,9 +40,22 @@ blob_container_client = blob_service_client.get_container_client(BLOB_CONTAINER_
 blob_chat_images_client = blob_service_client.get_container_client(BLOB_CHAT_IMAGES_CONTAINER)
 cosmos_client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
 
+# 컨테이너가 없으면 생성
+def create_container_if_not_exists(container_client):
+    try:
+        container_client.get_container_properties()
+    except azure.core.exceptions.ResourceNotFoundError:
+        container_client.create_container()
+    except azure.core.exceptions.ResourceExistsError:
+        pass  # 이미 존재하는 경우 무시
+
+create_container_if_not_exists(blob_container_client)
+create_container_if_not_exists(blob_chat_images_client)
+
 # Cosmos DB 컨테이너 초기화
 cosmos_database = cosmos_client.get_database_client(COSMOS_DATABASE_NAME)
 cosmos_container = cosmos_database.get_container_client(COSMOS_POSTS_CONTAINER)
+cosmos_comments_container = cosmos_database.get_container_client(COSMOS_COMMENTS_CONTAINER)
 
 cosmos_chat_database = cosmos_client.get_database_client(COSMOS_CHAT_DATABASE_NAME)
 cosmos_messages_container = cosmos_chat_database.get_container_client(COSMOS_MESSAGES_CONTAINER)
@@ -157,6 +172,10 @@ def blog():
     posts = get_posts()
     for post in posts:
         post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+        # 각 게시글의 댓글 수 가져오기
+        comments_query = f"SELECT VALUE COUNT(1) FROM c WHERE c.post_id = '{post['id']}'"
+        comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
+        post['comment_count'] = comments[0] if comments else 0
     return render_template('blog.html', posts=posts)
 
 @app.route('/post/<string:post_id>')
@@ -166,7 +185,21 @@ def post(post_id):
     if posts:
         post = posts[0]
         post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
-        return render_template('post.html', post=post)
+        # 필터 처리된 이미지 URL 사용
+        if post.get('is_filtered'):
+            post['display_image_url'] = post['image_url']
+            post['original_image_url'] = post.get('original_image_url')
+        else:
+            post['display_image_url'] = post['image_url']
+            post['original_image_url'] = None
+            
+        # 댓글 목록 가져오기
+        comments_query = f"SELECT * FROM c WHERE c.post_id = '{post_id}' ORDER BY c.date DESC"
+        comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
+        for comment in comments:
+            comment['date_str'] = datetime.fromisoformat(comment['date']).strftime('%Y-%m-%d %H:%M')
+            
+        return render_template('post_detail.html', post=post, comments=comments)
     return "게시물을 찾을 수 없습니다.", 404
 
 @app.route('/write')
@@ -182,14 +215,22 @@ def create_post():
     
     # 익명 사용자 정보 생성
     anonymous_id = generate_unique_id()
-    
     post_id = generate_unique_id()
     
     if image:
-        filename = secure_filename(image.filename)
-        image_url = upload_to_blob(image, filename, user_id=anonymous_id, post_id=post_id)
+        file_data = image.read()
+        # 원본 이미지 저장
+        original_filename = secure_filename(image.filename)
+        original_filename = f"original_{original_filename}"
+        original_image_url = upload_to_blob(file_data, original_filename, user_id=anonymous_id, post_id=post_id)
+        
+        # 필터 적용된 이미지 저장
+        processed_image_data = protect_image(file_data)
+        processed_filename = f"processed_{secure_filename(image.filename)}"
+        processed_image_url = upload_to_blob(processed_image_data, processed_filename, user_id=anonymous_id, post_id=post_id)
     else:
-        image_url = None
+        original_image_url = None
+        processed_image_url = None
         
     post_data = {
         'id': post_id,
@@ -197,9 +238,11 @@ def create_post():
         'username': '익명',
         'title': title,
         'content': content,
-        'image_url': image_url,
+        'image_url': processed_image_url,
         'date': datetime.now().isoformat(),
-        'password': password  # 삭제용 비밀번호 저장
+        'password': password,
+        'is_filtered': True,
+        'original_image_url': original_image_url
     }
     
     save_post(post_data)
@@ -215,7 +258,7 @@ def delete_post(post_id):
         post = posts[0]
         if post.get('password') == password:
             cosmos_container.delete_item(item=post, partition_key=post['id'])
-            return jsonify({'success': True})
+            return redirect(url_for("blog"))
         else:
             return "비밀번호가 일치하지 않습니다.", 403
     return "게시물을 찾을 수 없습니다.", 404
@@ -237,24 +280,30 @@ def apply_filter():
         return "사용자를 찾을 수 없습니다.", 404
 
     file_data = file.read()
-    processed_image_data = protect_image(file_data)
+    # 원본 이미지 저장
+    original_filename = secure_filename(file.filename)
+    original_filename = f"original_{original_filename}"
+    original_image_url = upload_to_blob(file_data, original_filename, blob_chat_images_client, user_id=user['id'])
     
-    filename = secure_filename(file.filename)
-    processed_filename = f"processed_{filename}"
-    image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
+    # 필터 적용된 이미지 저장
+    processed_image_data = protect_image(file_data)
+    processed_filename = f"processed_{secure_filename(file.filename)}"
+    processed_image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
     
     message_data = {
         'id': generate_unique_id(),
         'user_id': user['id'],
         'username': session["username"],
-        'content': image_url,
+        'content': processed_image_url,
         'type': 'image',
         'sender_class': 'mymsg',
-        'time': current_time()
+        'time': current_time(),
+        'is_filtered': True,
+        'original_image_url': original_image_url
     }
     
     save_chat_message(message_data)
-    return jsonify({"status": "success", "image_url": image_url}), 200
+    return jsonify({"status": "success", "image_url": processed_image_url}), 200
 
 @app.route('/apply_filter_blog', methods=['POST'])
 def apply_filter_blog():
@@ -279,6 +328,7 @@ def login():
         users = load_users()
         if username in users and users[username]['password'] == password:
             session["username"] = username
+            session["user_id"] = users[username]['id']  # user_id도 session에 저장
             return redirect(url_for("chat"))
         return render_template("login.html", error="잘못된 ID 또는 비밀번호입니다.")
     return render_template("login.html", error=None)
@@ -333,6 +383,29 @@ def send_message():
 def logout():
     session.pop("username", None)
     return redirect(url_for("main"))
+
+@app.route('/comments/<string:post_id>', methods=['POST'])
+def add_comment(post_id):
+    data = request.get_json()
+    content = data.get('content')
+    if not content:
+        return jsonify({"success": False, "message": "댓글 내용이 없습니다."}), 400
+        
+    # 익명 사용자 정보 생성
+    anonymous_id = generate_unique_id()
+    
+    comment_data = {
+        'id': generate_unique_id(),
+        'post_id': post_id,
+        'user_id': anonymous_id,
+        'username': '익명',
+        'content': content,
+        'date': datetime.now().isoformat(),
+        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M')
+    }
+    
+    cosmos_comments_container.create_item(body=comment_data)
+    return jsonify({"success": True, "comment": comment_data})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
