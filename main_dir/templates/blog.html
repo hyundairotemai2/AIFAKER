@@ -29,7 +29,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 .back-button {
   position: absolute;
   top: 10px;
-  right: 10px; /* 오른쪽 위에 배치 */
+  right: 10px;
 }
 </style>
 </head>
@@ -53,16 +53,17 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card-4 w3-margin w3-white">
         {% if post.image_url %}
           <div class="image-container">
-            <img src="{{ post.filtered_image_url if post.apply_filter else post.image_url }}" 
+            <img src="{{ post.filtered_image_url if post.apply_filter and post.filter_applied else post.image_url }}" 
                  class="post-image" 
                  data-filtered="{{ post.filtered_image_url if post.apply_filter else '' }}" 
-                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}">
+                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}"
+                 data-filter-applied="{{ 'true' if post.filter_applied else 'false' }}">
             <div class="loading-overlay">로딩 중...</div>
           </div>
         {% endif %}
         <div class="w3-container">
           <h3><b>{{ post.title }}</b></h3>
-          <h5>작성일, <span class="w3-opacity">{{ post.date_str }}</span></h5>    
+          <h5>작성일, <span class="w3-opacity">{{ post.date }}</span></h5>    
         </div>        
         <div class="w3-container">
           <p>{{ post.content[:100] }}...</p>
@@ -111,16 +112,28 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 document.addEventListener('DOMContentLoaded', function() {
   const images = document.querySelectorAll('.post-image');
   images.forEach(img => {
-    if (img.getAttribute('data-apply-filter') === 'true') {
+    const applyFilter = img.getAttribute('data-apply-filter') === 'true';
+    const filterApplied = img.getAttribute('data-filter-applied') === 'true';
+
+    if (applyFilter && !filterApplied) {
       const overlay = img.parentElement.querySelector('.loading-overlay');
-      overlay.style.display = 'flex'; // 이미지 위에 로딩 오버레이 표시
+      overlay.style.display = 'flex'; // 로딩 오버레이 표시
       setTimeout(() => {
-        img.src = img.getAttribute('data-filtered'); // 2초 후 필터링된 이미지로 변경
+        img.src = img.getAttribute('data-filtered'); // 필터링된 이미지로 변경
         overlay.style.display = 'none'; // 오버레이 숨김
-        fetch('/mark_filter_applied/' + img.closest('.w3-card-4').querySelector('button').getAttribute('onclick').match(/\d+/)[0], {
-          method: 'POST'
-        });
-      }, 2000);
+        const postId = img.closest('.w3-card-4').querySelector('button').getAttribute('onclick').match(/'([^']+)'/)[1];
+        fetch('/mark_filter_applied/' + postId, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to mark filter applied');
+          console.log(`Filter applied for post ${postId}`);
+        })
+        .catch(error => console.error('Error marking filter applied:', error));
+      }, 3000);
     }
   });
 });
