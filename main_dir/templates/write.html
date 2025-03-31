@@ -67,7 +67,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 document.getElementById('write-form').addEventListener('submit', function(e) {
   const imageInput = document.querySelector('input[name="image"]');
   if (imageInput.files && imageInput.files.length > 0) {
-    if (!confirm("필터를 적용하시겠습니까? (흑백 필터가 적용됩니다)")) {
+    if (!confirm("필터를 적용하시겠습니까? (필터가 적용됩니다)")) {
       e.preventDefault();
       const formData = new FormData(this);
       formData.append('apply_filter', 'false');
