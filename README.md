@@ -71,3 +71,54 @@ flowchart LR
     class Azure,Customer deploy;
 
 ```
+
+##  데이터베이스 아키텍처
+
+```mermaid
+erDiagram
+    USERS ||--o{ CHAT_MESSAGES : sends
+    USERS {
+        string id PK
+        string username
+        string password
+        string created_at
+        string role
+    }
+
+    CHAT_MESSAGES {
+        string id PK
+        string user_id FK
+        string username
+        string content
+        string type
+        string sender_class
+        string time
+        string timestamp
+        boolean is_filtered
+        string original_image_url
+    }
+
+    BLOG_POSTS {
+        string id PK
+        string user_id
+        string username
+        string title
+        string content
+        string image_url
+        string date
+        string password
+        boolean is_filtered
+        string original_image_url
+    }
+
+    BLOB_STORAGE {
+        string container_name
+        string blob_name
+        string sas_url
+        string user_id
+        string post_id
+    }
+
+    BLOB_STORAGE ||--o{ BLOG_POSTS : contains
+    BLOB_STORAGE ||--o{ CHAT_MESSAGES : contains
+```
