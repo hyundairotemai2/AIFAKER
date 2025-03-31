@@ -58,7 +58,9 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   <div class="w3-container w3-white w3-margin w3-padding">
     <div class="image-container">
       {% if post.display_image_url %}
-        <img src="{{ post.display_image_url }}" style="width:100%; max-width:600px">
+        <img src="{{ post.display_image_url }}" 
+             class="post-image"
+             style="width:100%; max-width:600px">
         {% if post.original_image_url %}
           <p class="w3-opacity">원본 이미지: <a href="{{ post.original_image_url }}" target="_blank">보기</a></p>
         {% endif %}
