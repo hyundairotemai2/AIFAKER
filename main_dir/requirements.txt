@@ -1,0 +1,14 @@
+Flask
+gunicorn
+werkzeug
+opencv-python-headless
+torch
+numpy
+pillow
+torchvision
+diffusers
+matplotlib
+azure-storage-blob==12.19.1
+azure-cosmos==4.6.0
+azure-core==1.29.4
+python-dotenv

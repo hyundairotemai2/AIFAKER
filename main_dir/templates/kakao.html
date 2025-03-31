@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Image Upload</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/meyer-reset/2.0/reset.min.css"/>
+    <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
+    <style>
+        body {
+            background-color: #fae100; /* 카카오톡 노란색 배경 */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .chat_wrap {
+            background-color: #ffffff;
+            width: 400px;
+            padding: 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            margin: 20px auto;
+        }
+        .chat_wrap .inner {
+            background-color: #d6eaf8; /* 연한 하늘색 */
+            border-radius: 10px;
+            padding: 15px;
+            overflow-y: scroll;
+            height: 600px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .chat_wrap .item {
+            margin-top: 15px;
+            display: flex;
+            width: 100%;
+            justify-content: center;
+        }
+        .chat_wrap .item.mymsg {
+            justify-content: flex-end;
+        }
+        .chat_wrap .item.yourmsg {
+            justify-content: flex-start;
+        }
+        .chat_wrap .item .box {
+            display: inline-block;
+            max-width: 280px;
+            position: relative;
+            text-align: left;
+        }
+        .chat_wrap .item .box .msg {
+            background: #ffffff;
+            border-radius: 15px;
+            padding: 10px 15px;
+            word-break: break-word;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+        .chat_wrap .item.mymsg .box .msg {
+            background: #fee600; /* 카카오톡 노란색 메시지 */
+            color: #3c1e1e; /* 갈색 텍스트 */
+        }
+        .chat_wrap .item .box .time {
+            font-size: 11px;
+            color: #666;
+            display: block;
+            text-align: right;
+            margin-top: 5px;
+        }
+        input[type="text"], input[type="file"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 25px;
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #f8f8f8;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="file"]:focus {
+            border-color: #3c1e1e;
+            outline: none;
+        }
+        .chat_wrap .item .box img {
+            max-width: 180px;
+            border-radius: 12px;
+            filter: grayscale(100%);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        .logout {
+            text-align: center;
+            margin-top: 15px;
+        }
+        .logout a {
+            color: #3c1e1e; /* 갈색으로 변경 */
+            text-decoration: none;
+            font-weight: 500;
+            padding: 5px 10px;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+        .logout a:hover {
+            background-color: #e9ecef;
+        }
+        .download-btn {
+            margin-top: 8px;
+            padding: 6px 12px;
+            background-color: #3c1e1e; /* 카카오톡 갈색 */
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            width: 100%;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 500;
+            transition: background-color 0.3s;
+        }
+        .download-btn:hover {
+            background-color: #2e1717; /* 더 어두운 갈색 */
+        }
+    </style>
+</head>
+<body>
+    <div class="chat_wrap">
+        <div class="inner">
+            {% for msg in messages %}
+            <div class="item {{ msg.sender_class }}">
+                <div class="box">
+                    {% if msg.type == 'text' %}
+                    <p class="msg">{{ msg.content }}</p>
+                    {% elif msg.type == 'image' %}
+                    <img src="{{ msg.content }}">
+                    <button class="download-btn" onclick="downloadImage('{{ msg.content }}')">다운로드</button>
+                    {% endif %}
+                    <span class="time">{{ msg.time }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        <input type="text" class="mymsg" placeholder="내 메시지 입력">
+        <input type="text" class="yourmsg" placeholder="상대방 메시지 입력">
+        <input type="file" id="imageUpload" accept="image/*">
+        <div class="logout"><a href="{{ url_for('login') }}">로그아웃</a></div>
+    </div>
+    <script>
+        $(function(){
+            $(".mymsg, .yourmsg").keypress(function(e){
+                if(e.keyCode == 13 && $(this).val().length){
+                    let senderClass = $(this).hasClass("mymsg") ? "mymsg" : "yourmsg";
+                    let content = $(this).val();
+                    $.ajax({
+                        url: "/send_message",
+                        type: "POST",
+                        data: { message: content, sender_class: senderClass },
+                        success: function(response){
+                            if(response.status === "success"){
+                                loadMessages();
+                            }
+                        },
+                        error: function(xhr, status, error){
+                            console.log("메시지 전송 실패: " + error);
+                        }
+                    });
+                    $(this).val('');
+                }
+            });
+
+            $("#imageUpload").change(function(event){
+                let file = event.target.files[0];
+                if(file){
+                    let formData = new FormData();
+                    formData.append("file", file);
+                    let useFilter = confirm("필터를 사용하시겠습니까?");
+                    if(useFilter){
+                        $.ajax({
+                            url: "/apply_filter",
+                            type: "POST",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response){
+                                if(response.status === "success"){
+                                    loadMessages();
+                                }
+                            },
+                            error: function(xhr, status, error){
+                                console.log("이미지 업로드 실패: " + error);
+                            }
+                        });
+                    } else {
+                        let reader = new FileReader();
+                        reader.onload = function(e){
+                            sendMessage(e.target.result, 'image', 'mymsg');
+                        }
+                        reader.readAsDataURL(file);
+                    }
+                    $(this).val('');
+                }
+            });
+
+            loadMessages();
+        });
+
+        function sendMessage(content, type, senderClass){
+            let msgContent = type === 'image' 
+                ? `<img src="${content}"><button class="download-btn" onclick="downloadImage('${content}')">다운로드</button>` 
+                : `<p class="msg">${content}</p>`;
+            let messageHTML = `<div class="item ${senderClass}"><div class="box">${msgContent}<span class="time">${currentTime()}</span></div></div>`;
+            let chatInner = $(".chat_wrap .inner");
+            chatInner.append(messageHTML);
+            chatInner.scrollTop(chatInner[0].scrollHeight);
+        }
+
+        function loadMessages(){
+            $.get("/chat", function(data){
+                $(".inner").html($(data).find(".inner").html());
+                $(".chat_wrap .inner").scrollTop($(".chat_wrap .inner")[0].scrollHeight);
+            }).fail(function(xhr, status, error){
+                console.log("메시지 로드 실패: " + error);
+            });
+        }
+
+        function currentTime(){
+            let date = new Date();
+            let hh = date.getHours();
+            let mm = date.getMinutes();
+            let apm = hh >= 12 ? "오후" : "오전";
+            hh = hh % 12 || 12;
+            return `${apm} ${hh}:${mm < 10 ? '0' + mm : mm}`;
+        }
+
+        function downloadImage(url) {
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = 'image.png';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+
+        function applyFilter() {
+            const fileInput = document.getElementById('imageInput');
+            const file = fileInput.files[0];
+            if (!file) {
+                alert('이미지를 선택해주세요.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/apply_filter', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    // 이미지 URL을 직접 사용하여 메시지 추가
+                    const messageHtml = `
+                        <div class="message mymsg">
+                            <div class="message-content">
+                                <img src="${data.image_url}" alt="처리된 이미지" style="max-width: 200px;">
+                            </div>
+                            <div class="message-time">${currentTime()}</div>
+                        </div>
+                    `;
+                    document.querySelector('.chat-messages').insertAdjacentHTML('beforeend', messageHtml);
+                    fileInput.value = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('이미지 처리 중 오류가 발생했습니다.');
+            });
+        }
+    </script>
+</body>
+</html>

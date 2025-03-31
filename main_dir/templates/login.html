@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
+<<<<<<< HEAD
     <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
 </head>
 <body>
@@ -34,5 +35,146 @@
         {% endif %}
     </table>
 </form>
+=======
+    <style>
+        body {
+            background-color: #fee600; /* 카카오톡 노란색 배경 */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            flex-direction: column; /* 버튼과 폼을 수직으로 정렬 */
+        }
+        .back-button {
+            background-color: #3c1e1e; /* 카카오톡 갈색 버튼 */
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-bottom: 20px; /* 폼과 간격 */
+            transition: background-color 0.3s;
+            text-decoration: none; /* 링크 스타일 제거 */
+        }
+        .back-button:hover {
+            background-color: #2e1717; /* 더 어두운 갈색 */
+        }
+        form {
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            width: 350px;
+            text-align: center;
+        }
+        h2 {
+            color: #3c1e1e; /* 카카오톡 갈색 텍스트 */
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 20px;
+        }
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 25px; /* 둥근 입력 필드 */
+            font-size: 14px;
+            box-sizing: border-box;
+            background-color: #f8f8f8;
+            transition: border-color 0.3s;
+        }
+        input[type="text"]:focus, input[type="password"]:focus {
+            border-color: #3c1e1e;
+            outline: none;
+        }
+        input[type="checkbox"] {
+            margin: 10px 5px 10px 0;
+            vertical-align: middle;
+        }
+        label {
+            color: #666;
+            font-size: 14px;
+            vertical-align: middle;
+        }
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #3c1e1e; /* 카카오톡 갈색 버튼 */
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #2e1717; /* 더 어두운 갈색 */
+        }
+        .join {
+            margin-top: 15px;
+        }
+        .join a {
+            color: #3c1e1e;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+            transition: color 0.3s;
+        }
+        .join a:hover {
+            color: #2e1717;
+        }
+        .error {
+            color: red;
+            font-size: 12px;
+            margin-top: 10px;
+        }
+        table {
+            width: 100%;
+        }
+        td {
+            padding: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="window.location.href='/'">처음 화면으로</button>
+    <form method="POST">
+        <table>
+            <tr>
+                <td><h2>로그인</h2></td>
+            </tr>
+            <tr>
+                <td><input type="text" name="username" placeholder="ID" required></td>
+            </tr>
+            <tr>
+                <td><input type="password" name="password" placeholder="Password" required></td>
+            </tr>
+            <tr>
+                <td>
+                    <input type="checkbox" id="save-login" name="save-login">
+                    <label for="save-login">로그인 정보 저장</label>
+                </td>
+            </tr>
+            <tr>
+                <td><input type="submit" value="Sign in" class="btn"></td>
+            </tr>
+            <tr>
+                <td class="join"><a href="{{ url_for('join') }}">회원가입</a></td>
+            </tr>
+            {% if error %}
+            <tr>
+                <td class="error">{{ error }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </form>
+>>>>>>> c99ea18f0b117bfa622e11f7690b3a933859539f
 </body>
 </html>
