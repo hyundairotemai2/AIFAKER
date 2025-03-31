@@ -21,6 +21,11 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 .image-container {
     margin-bottom: 20px;
 }
+.post-image {
+    width: 100%;
+    max-width: 600px;
+    object-fit: cover;
+}
 #deleteForm {
     position: fixed;
     top: 50%;
@@ -60,7 +65,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       {% if post.display_image_url %}
         <img src="{{ post.display_image_url }}" 
              class="post-image"
-             style="width:100%; max-width:600px">
+             alt="게시글 이미지">
         {% if post.original_image_url %}
           <p class="w3-opacity">원본 이미지: <a href="{{ post.original_image_url }}" target="_blank">보기</a></p>
         {% endif %}
