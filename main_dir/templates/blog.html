@@ -8,8 +8,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
-.image-container { position: relative; display: inline-block; width: 100%; }
-.post-image { width: 100%; }
+.image-container { 
+    position: relative; 
+    display: inline-block; 
+    width: 100%; 
+}
+.post-image { 
+    width: 100%; 
+    max-height: 400px;
+    object-fit: cover;
+}
 .loading-overlay {
   display: none;
   position: absolute;
@@ -24,12 +32,12 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   font-size: 20px;
 }
 .header-container {
-  position: relative;
+    position: relative;
 }
 .back-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 </style>
 </head>
@@ -53,23 +61,26 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card-4 w3-margin w3-white">
         {% if post.image_url %}
           <div class="image-container">
-            <img src="{{ post.filtered_image_url if post.apply_filter and post.filter_applied else post.image_url }}" 
+            <img src="{{ post.image_url }}" 
                  class="post-image" 
-                 data-filtered="{{ post.filtered_image_url if post.apply_filter else '' }}" 
-                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}"
-                 data-filter-applied="{{ 'true' if post.filter_applied else 'false' }}">
+                 data-filtered="{{ post.image_url }}"
+                 data-apply-filter="{{ 'true' if post.is_filtered else 'false' }}"
+                 alt="게시글 이미지">
             <div class="loading-overlay">로딩 중...</div>
           </div>
         {% endif %}
         <div class="w3-container">
           <h3><b>{{ post.title }}</b></h3>
-          <h5>작성일, <span class="w3-opacity">{{ post.date }}</span></h5>    
-        </div>        
-        <div class="w3-container">
-          <p>{{ post.content[:100] }}...</p>
-          <button class="w3-button w3-padding-large w3-white w3-border" onclick="window.location.href='/post/{{ post.id }}'">
-            <b>READ MORE »</b>
-          </button>
+          <h5>작성일, <span class="w3-opacity">{{ post.date }}</span></h5>
+          <p>{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+          <div class="w3-row">
+            <div class="w3-col m8 s12">
+              <p><a href="{{ url_for('post', post_id=post.id) }}" class="w3-button w3-padding-large w3-white w3-border">READ MORE »</a></p>
+            </div>
+            <div class="w3-col m4 w3-hide-small">
+              <p><span class="w3-padding-large w3-right"><b>댓글  </b> <span class="w3-badge">{{ post.comment_count }}</span></span></p>
+            </div>
+          </div>
         </div>
       </div>
       <hr>
