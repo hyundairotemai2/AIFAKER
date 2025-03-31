@@ -1,0 +1,11 @@
+Flask
+gunicorn
+werkzeug
+opencv-python-headless
+numpy
+pillow
+torch
+torchvision
+diffusers
+flask_socketio
+alive_progress
