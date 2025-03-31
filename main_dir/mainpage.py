@@ -158,8 +158,24 @@ def main():
 def blog():
     posts = get_posts()
     for post in posts:
-        post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+        # 'date' 필드가 없으면 'created_at' 사용, 둘 다 없으면 현재 시간
+        date_str = post.get('date') or post.get('created_at') or datetime.now().isoformat()
+        post['date'] = datetime.fromisoformat(date_str).strftime('%Y-%m-%d %H:%M')
+        # 필드가 없는 경우 기본값 설정
+        post['filter_applied'] = post.get('filter_applied', False)
+        post['apply_filter'] = post.get('apply_filter', False)
     return render_template('blog.html', posts=posts)
+
+@app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
+def mark_filter_applied(post_id):
+    query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
+    posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
+    if posts:
+        post = posts[0]
+        post['filter_applied'] = True
+        cosmos_container.replace_item(item=post, body=post)
+        return jsonify({'success': True})
+    return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
 
 @app.route('/post/<string:post_id>')
 def post(post_id):
@@ -306,16 +322,6 @@ def apply_filter_blog():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
-def mark_filter_applied(post_id):
-    query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
-    posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
-    if posts:
-        post = posts[0]
-        post['filter_applied'] = True
-        cosmos_container.replace_item(item=post, body=post)
-        return jsonify({'success': True})
-    return jsonify({'error': '게시물을 찾을 수 없습니다.'}), 404
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
