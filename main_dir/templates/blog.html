@@ -8,8 +8,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
-.image-container { position: relative; display: inline-block; width: 100%; }
-.post-image { width: 100%; }
+.image-container { 
+    position: relative; 
+    display: inline-block; 
+    width: 100%; 
+}
+.post-image { 
+    width: 100%; 
+    max-height: 400px;
+    object-fit: cover;
+}
 .loading-overlay {
   display: none;
   position: absolute;
@@ -24,12 +32,12 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   font-size: 20px;
 }
 .header-container {
-  position: relative;
+    position: relative;
 }
 .back-button {
-  position: absolute;
-  top: 10px;
-  right: 10px; /* 오른쪽 위에 배치 */
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 </style>
 </head>
@@ -53,22 +61,26 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card-4 w3-margin w3-white">
         {% if post.image_url %}
           <div class="image-container">
-            <img src="{{ post.filtered_image_url if post.apply_filter else post.image_url }}" 
+            <img src="{{ post.image_url }}" 
                  class="post-image" 
-                 data-filtered="{{ post.filtered_image_url if post.apply_filter else '' }}" 
-                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}">
+                 data-filtered="{{ post.image_url }}"
+                 data-apply-filter="{{ 'true' if post.is_filtered else 'false' }}"
+                 alt="게시글 이미지">
             <div class="loading-overlay">로딩 중...</div>
           </div>
         {% endif %}
         <div class="w3-container">
           <h3><b>{{ post.title }}</b></h3>
-          <h5>작성일, <span class="w3-opacity">{{ post.date_str }}</span></h5>    
-        </div>        
-        <div class="w3-container">
-          <p>{{ post.content[:100] }}...</p>
-          <button class="w3-button w3-padding-large w3-white w3-border" onclick="window.location.href='/post/{{ post.id }}'">
-            <b>READ MORE »</b>
-          </button>
+          <h5>작성일, <span class="w3-opacity">{{ post.date }}</span></h5>
+          <p>{{ post.content[:200] }}{% if post.content|length > 200 %}...{% endif %}</p>
+          <div class="w3-row">
+            <div class="w3-col m8 s12">
+              <p><a href="{{ url_for('post', post_id=post.id) }}" class="w3-button w3-padding-large w3-white w3-border">READ MORE »</a></p>
+            </div>
+            <div class="w3-col m4 w3-hide-small">
+              <p><span class="w3-padding-large w3-right"><b>댓글  </b> <span class="w3-badge">{{ post.comment_count }}</span></span></p>
+            </div>
+          </div>
         </div>
       </div>
       <hr>
@@ -111,16 +123,28 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 document.addEventListener('DOMContentLoaded', function() {
   const images = document.querySelectorAll('.post-image');
   images.forEach(img => {
-    if (img.getAttribute('data-apply-filter') === 'true') {
+    const applyFilter = img.getAttribute('data-apply-filter') === 'true';
+    const filterApplied = img.getAttribute('data-filter-applied') === 'true';
+
+    if (applyFilter && !filterApplied) {
       const overlay = img.parentElement.querySelector('.loading-overlay');
-      overlay.style.display = 'flex'; // 이미지 위에 로딩 오버레이 표시
+      overlay.style.display = 'flex'; // 로딩 오버레이 표시
       setTimeout(() => {
-        img.src = img.getAttribute('data-filtered'); // 2초 후 필터링된 이미지로 변경
+        img.src = img.getAttribute('data-filtered'); // 필터링된 이미지로 변경
         overlay.style.display = 'none'; // 오버레이 숨김
-        fetch('/mark_filter_applied/' + img.closest('.w3-card-4').querySelector('button').getAttribute('onclick').match(/\d+/)[0], {
-          method: 'POST'
-        });
-      }, 2000);
+        const postId = img.closest('.w3-card-4').querySelector('button').getAttribute('onclick').match(/'([^']+)'/)[1];
+        fetch('/mark_filter_applied/' + postId, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('Failed to mark filter applied');
+          console.log(`Filter applied for post ${postId}`);
+        })
+        .catch(error => console.error('Error marking filter applied:', error));
+      }, 3000);
     }
   });
 });

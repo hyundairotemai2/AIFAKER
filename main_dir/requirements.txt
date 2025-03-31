@@ -8,7 +8,12 @@ pillow
 torchvision
 diffusers
 matplotlib
-azure-storage-blob==12.19.1
-azure-cosmos==4.6.0
-azure-core==1.29.4
+azure-storage-blob
+azure-cosmos
+azure-core
+azure-identity
 python-dotenv
+
+azure-core==1.32.0
+azure-cosmos==4.9.0
+azure-storage-blob==12.25.1
