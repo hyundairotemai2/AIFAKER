@@ -130,3 +130,6 @@ erDiagram
     BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
     CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
+
+##  노이즈 단계별 이미지 검증 결과
+![노이즈 단계별 이미지 검증 결과](https://github.com/user-attachments/assets/a07be288-b4ea-4dea-a116-3b32af515e61)
