@@ -25,7 +25,9 @@ gantt
     section 개발
     기능 개발 :2025-03-12, 10d
     테스트 :2025-03-22, 4d
+```
 
+```mermaid
 flowchart LR
     Engineer["👨‍💻 개발자 (Engineer)"]
     IDE["🧱 VSCode (IDE)"]
