@@ -8,7 +8,7 @@
     <script src="https://code.jquery.com/jquery-1.8.3.min.js"></script>
     <style>
         body {
-            background-color: #fae100; /* 카카오톡 노란색 배경 */
+            background-color: #fae100;
             margin: 0;
             height: 100vh;
             display: flex;
@@ -23,10 +23,10 @@
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
-            position: relative; /* 채팅 영역에 상대적 위치 부여 */
+            position: relative;
         }
         .chat_wrap .inner {
-            background-color: #d6eaf8; /* 연한 하늘색 */
+            background-color: #d6eaf8;
             border-radius: 10px;
             padding: 15px;
             overflow-y: scroll;
@@ -61,8 +61,8 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
         }
         .chat_wrap .item.mymsg .box .msg {
-            background: #fee600; /* 카카오톡 노란색 메시지 */
-            color: #3c1e1e; /* 갈색 텍스트 */
+            background: #fee600;
+            color: #3c1e1e;
         }
         .chat_wrap .item .box .time {
             font-size: 11px;
@@ -89,7 +89,6 @@
         .chat_wrap .item .box img {
             max-width: 180px;
             border-radius: 12px;
-            filter: grayscale(100%);
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         .logout {
@@ -97,7 +96,7 @@
             margin-top: 15px;
         }
         .logout a {
-            color: #3c1e1e; /* 갈색으로 변경 */
+            color: #3c1e1e;
             text-decoration: none;
             font-weight: 500;
             padding: 5px 10px;
@@ -110,7 +109,7 @@
         .download-btn {
             margin-top: 8px;
             padding: 6px 12px;
-            background-color: #3c1e1e; /* 카카오톡 갈색 */
+            background-color: #3c1e1e;
             color: #ffffff;
             border: none;
             border-radius: 25px;
@@ -122,26 +121,35 @@
             transition: background-color 0.3s;
         }
         .download-btn:hover {
-            background-color: #2e1717; /* 더 어두운 갈색 */
+            background-color: #2e1717;
         }
         #loading {
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background: rgba(255, 255, 255, 0.7); /* 반투명 배경 */
+            background: rgba(255, 255, 255, 0.7);
             padding: 20px;
             border-radius: 10px;
             font-size: 18px;
             color: #3c1e1e;
-            display: none; /* 기본적으로 숨김 */
-            z-index: 10; /* 채팅 내용보다 위에 표시되도록 설정 */
+            display: none;
+            z-index: 10;
+        }
+        .filter-options {
+            margin: 10px 0;
+            text-align: center;
+        }
+        .filter-options label {
+            margin: 0 10px;
+            font-size: 14px;
+            color: #3c1e1e;
         }
     </style>
 </head>
 <body>
     <div class="chat_wrap">
-        <div id="loading">로딩 중...</div> <!-- 로딩 중 메시지 -->
+        <div id="loading">로딩 중...</div>
         <div class="inner">
             {% for msg in messages %}
             <div class="item {{ msg.sender_class }}">
@@ -160,7 +168,12 @@
         <input type="text" class="mymsg" placeholder="내 메시지 입력">
         <input type="text" class="yourmsg" placeholder="상대방 메시지 입력">
         <input type="file" id="imageUpload" accept="image/*">
-        <div class="logout"><a href="{{ url_for('login') }}">로그아웃</a></div>
+        <div class="filter-options">
+            <label><input type="radio" name="filter" value="none" checked> 필터 없음</label>
+            <label><input type="radio" name="filter" value="sgn"> SGN 필터</label>
+            <label><input type="radio" name="filter" value="pgd"> PGD 필터</label>
+        </div>
+        <div class="logout"><a href="{{ url_for('logout') }}">로그아웃</a></div>
     </div>
     <script>
         $(function(){
@@ -188,14 +201,13 @@
             $("#imageUpload").change(function(event){
                 let file = event.target.files[0];
                 if(file){
-                    // 로딩 메시지 보이기
                     $("#loading").show();
 
                     let formData = new FormData();
                     formData.append("file", file);
-                    let useFilter = confirm("필터를 사용하시겠습니까?");
-                    
-                    if(useFilter){
+                    let selectedFilter = $('input[name="filter"]:checked').val();
+
+                    if(selectedFilter === "sgn"){
                         $.ajax({
                             url: "/apply_filter",
                             type: "POST",
@@ -203,23 +215,38 @@
                             processData: false,
                             contentType: false,
                             success: function(response){
-                                // 업로드 완료 후 로딩 메시지 숨기기
                                 $("#loading").hide();
                                 if(response.status === "success"){
                                     loadMessages();
                                 }
                             },
                             error: function(xhr, status, error){
-                                // 업로드 실패 시 로딩 메시지 숨기기
                                 $("#loading").hide();
-                                console.log("이미지 업로드 실패: " + error);
+                                console.log("SGN 필터 적용 실패: " + error);
+                            }
+                        });
+                    } else if(selectedFilter === "pgd"){
+                        $.ajax({
+                            url: "/apply_filter_pgd",
+                            type: "POST",
+                            data: formData,
+                            processData: false,
+                            contentType: false,
+                            success: function(response){
+                                $("#loading").hide();
+                                if(response.status === "success"){
+                                    loadMessages();
+                                }
+                            },
+                            error: function(xhr, status, error){
+                                $("#loading").hide();
+                                console.log("PGD 필터 적용 실패: " + error);
                             }
                         });
                     } else {
                         let reader = new FileReader();
                         reader.onload = function(e){
                             sendMessage(e.target.result, 'image', 'mymsg');
-                            // 업로드 완료 후 로딩 메시지 숨기기
                             $("#loading").hide();
                         }
                         reader.readAsDataURL(file);
