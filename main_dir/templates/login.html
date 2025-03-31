@@ -4,38 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-<<<<<<< HEAD
-    <link rel="stylesheet" href="{{ url_for('static', filename='login.css') }}">
-</head>
-<body>
-<form method="POST">
-    <table>
-        <tr>
-            <td><h2>로그인</h2></td>
-        </tr>
-        <tr>
-            <td><input type="text" name="username" placeholder="ID" required></td>
-        </tr>
-        <tr>
-            <td><input type="password" name="password" placeholder="Password" required></td>
-        </tr>
-        <tr>
-            <td><input type="checkbox"> 로그인 정보 저장</td>
-        </tr>
-        <tr>
-            <td><input type="submit" value="Sign in" class="btn"></td>
-        </tr>
-        <tr>
-            <td class="join"><a href="{{ url_for('join') }}">회원가입</a></td>
-        </tr>
-        {% if error %}
-        <tr>
-            <td style="color: red;">{{ error }}</td>
-        </tr>
-        {% endif %}
-    </table>
-</form>
-=======
     <style>
         body {
             background-color: #fee600; /* 카카오톡 노란색 배경 */
@@ -175,6 +143,5 @@
             {% endif %}
         </table>
     </form>
->>>>>>> c99ea18f0b117bfa622e11f7690b3a933859539f
 </body>
 </html>
