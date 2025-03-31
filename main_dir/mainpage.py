@@ -341,23 +341,28 @@ def apply_filter():
     save_chat_message(message_data)
     return jsonify({"status": "success", "image_url": processed_image_url}), 200
 
-
 @app.route('/comments/<string:post_id>', methods=['POST'])
 def add_comment(post_id):
-    content = request.json.get('content')
+    data = request.get_json()
+    content = data.get('content')
     if not content:
-        return jsonify({'success': False, 'error': '내용이 없습니다.'}), 400
-
+        return jsonify({"success": False, "message": "댓글 내용이 없습니다."}), 400
+        
+    # 익명 사용자 정보 생성
+    anonymous_id = generate_unique_id()
+    
     comment_data = {
         'id': generate_unique_id(),
         'post_id': post_id,
+        'user_id': anonymous_id,
+        'username': '익명',
         'content': content,
-        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M'),
-        'username': '익명'  # 필요 시 사용자 인증 추가
+        'date': datetime.now().isoformat(),
+        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M')
     }
-    cosmos_container.create_item(body=comment_data)  # 동일 컨테이너 사용, 별도 컨테이너 필요 시 수정
-    return jsonify({'success': True, 'comment': comment_data})
-
+    
+    cosmos_comments_container.create_item(body=comment_data)
+    return jsonify({"success": True, "comment": comment_data})
 
 @app.route('/apply_filter_blog', methods=['POST'])
 def apply_filter_blog():
@@ -373,7 +378,6 @@ def apply_filter_blog():
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
-
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -438,29 +442,6 @@ def send_message():
 def logout():
     session.pop("username", None)
     return redirect(url_for("main"))
-
-@app.route('/comments/<string:post_id>', methods=['POST'])
-def add_comment(post_id):
-    data = request.get_json()
-    content = data.get('content')
-    if not content:
-        return jsonify({"success": False, "message": "댓글 내용이 없습니다."}), 400
-        
-    # 익명 사용자 정보 생성
-    anonymous_id = generate_unique_id()
-    
-    comment_data = {
-        'id': generate_unique_id(),
-        'post_id': post_id,
-        'user_id': anonymous_id,
-        'username': '익명',
-        'content': content,
-        'date': datetime.now().isoformat(),
-        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M')
-    }
-    
-    cosmos_comments_container.create_item(body=comment_data)
-    return jsonify({"success": True, "comment": comment_data})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
