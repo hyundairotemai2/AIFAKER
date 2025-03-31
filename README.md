@@ -6,32 +6,39 @@
 
 [프레젠테이션](https://www.canva.com/design/DAGim4xNjVM/OS5Z3hfUzYSrRb0oreUEyw/edit?utm_content=DAGim4xNjVM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
+# 🔧 프로젝트 이름 (예: Noise-Aware Web Platform)
+
+> Flask 기반 웹 애플리케이션 + 노이즈 모델 + 프론트엔드 통합 프로젝트  
+> GitHub Actions를 활용한 CI/CD와 Azure 배포까지 전 과정 포함
+
+---
+
+## 📅 프로젝트 일정
+
 ```mermaid
 gantt
     title 프로젝트 일정
     dateFormat 2025-03
     section 준비
     기획 :a1, 2025-03-03, 7d
-    설계 :after a1 2025-03-11, 4d
+    설계 :after a1, 2025-03-11, 4d
     section 개발
     기능 개발 :2025-03-12, 10d
     테스트 :2025-03-22, 4d
-    flowchart LR
-```
 
-```mermaid
-    Engineer["👨‍💻 개발자<br/>(Engineer)"]
-    IDE["🧱 VSCode<br/>(IDE)"]
-    Codebase["📂 코드베이스<br/>(Project Structure)"]
+flowchart LR
+    Engineer["👨‍💻 개발자 (Engineer)"]
+    IDE["🧱 VSCode (IDE)"]
+    Codebase["📂 코드베이스 (Project Structure)"]
 
-    Model["🧪 노이즈 모델<br/>(Noise_model)"]
-    Frontend["🎨 프론트엔드<br/>(Front_end)"]
-    Backend["⚙️ Flask 앱<br/>(Webapplication)"]
+    Model["🧪 노이즈 모델 (Noise_model)"]
+    Frontend["🎨 프론트엔드 (Front_end)"]
+    Backend["⚙️ Flask 앱 (Webapplication)"]
 
-    GitHub["🌐 GitHub<br/>(Remote Repository)"]
-    Actions["🔄 GitHub Actions<br/>(CI/CD Tool)"]
-    Azure["☁️ Azure<br/>(Webserver)"]
-    Customer["🙋 사용자<br/>(Customer)"]
+    GitHub["🌐 GitHub (Remote Repository)"]
+    Actions["🔄 GitHub Actions (CI/CD Tool)"]
+    Azure["☁️ Azure (Webserver)"]
+    Customer["🙋 사용자 (Customer)"]
 
     Engineer --> IDE
     IDE --> Codebase
@@ -46,16 +53,4 @@ gantt
     GitHub --> Actions
     Actions --> Azure
     Azure --> Customer
-
-    %% ✅ 클래스 정의 (노드 색상)
-    classDef dev fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
-    classDef code fill:#fffbe6,stroke:#faad14,stroke-width:2px;
-    classDef infra fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
-    classDef deploy fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
-
-    %% ✅ 클래스 적용
-    class Engineer,IDE dev;
-    class Codebase,Model,Frontend,Backend code;
-    class GitHub,Actions infra;
-    class Azure,Customer deploy;
 ```
