@@ -23,6 +23,7 @@
             border-radius: 15px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             margin: 20px auto;
+            position: relative; /* 채팅 영역에 상대적 위치 부여 */
         }
         .chat_wrap .inner {
             background-color: #d6eaf8; /* 연한 하늘색 */
@@ -31,7 +32,7 @@
             overflow-y: scroll;
             height: 600px;
             display: flex;
-            flex-direction: column;
+            flex-direction: column-reverse;
             align-items: center;
         }
         .chat_wrap .item {
@@ -123,10 +124,24 @@
         .download-btn:hover {
             background-color: #2e1717; /* 더 어두운 갈색 */
         }
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.7); /* 반투명 배경 */
+            padding: 20px;
+            border-radius: 10px;
+            font-size: 18px;
+            color: #3c1e1e;
+            display: none; /* 기본적으로 숨김 */
+            z-index: 10; /* 채팅 내용보다 위에 표시되도록 설정 */
+        }
     </style>
 </head>
 <body>
     <div class="chat_wrap">
+        <div id="loading">로딩 중...</div> <!-- 로딩 중 메시지 -->
         <div class="inner">
             {% for msg in messages %}
             <div class="item {{ msg.sender_class }}">
@@ -173,9 +188,13 @@
             $("#imageUpload").change(function(event){
                 let file = event.target.files[0];
                 if(file){
+                    // 로딩 메시지 보이기
+                    $("#loading").show();
+
                     let formData = new FormData();
                     formData.append("file", file);
                     let useFilter = confirm("필터를 사용하시겠습니까?");
+                    
                     if(useFilter){
                         $.ajax({
                             url: "/apply_filter",
@@ -184,11 +203,15 @@
                             processData: false,
                             contentType: false,
                             success: function(response){
+                                // 업로드 완료 후 로딩 메시지 숨기기
+                                $("#loading").hide();
                                 if(response.status === "success"){
                                     loadMessages();
                                 }
                             },
                             error: function(xhr, status, error){
+                                // 업로드 실패 시 로딩 메시지 숨기기
+                                $("#loading").hide();
                                 console.log("이미지 업로드 실패: " + error);
                             }
                         });
@@ -196,6 +219,8 @@
                         let reader = new FileReader();
                         reader.onload = function(e){
                             sendMessage(e.target.result, 'image', 'mymsg');
+                            // 업로드 완료 후 로딩 메시지 숨기기
+                            $("#loading").hide();
                         }
                         reader.readAsDataURL(file);
                     }
@@ -241,43 +266,6 @@
             document.body.appendChild(a);
             a.click();
             document.body.removeChild(a);
-        }
-
-        function applyFilter() {
-            const fileInput = document.getElementById('imageInput');
-            const file = fileInput.files[0];
-            if (!file) {
-                alert('이미지를 선택해주세요.');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('file', file);
-
-            fetch('/apply_filter', {
-                method: 'POST',
-                body: formData
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    // 이미지 URL을 직접 사용하여 메시지 추가
-                    const messageHtml = `
-                        <div class="message mymsg">
-                            <div class="message-content">
-                                <img src="${data.image_url}" alt="처리된 이미지" style="max-width: 200px;">
-                            </div>
-                            <div class="message-time">${currentTime()}</div>
-                        </div>
-                    `;
-                    document.querySelector('.chat-messages').insertAdjacentHTML('beforeend', messageHtml);
-                    fileInput.value = '';
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('이미지 처리 중 오류가 발생했습니다.');
-            });
         }
     </script>
 </body>
