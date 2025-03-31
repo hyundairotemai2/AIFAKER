@@ -23,16 +23,16 @@ jobs:
       - name: Set up virtual environment and install dependencies
         run: |
           set -e
-          cd insta/insta
+          cd main_dir
           python -m venv antenv
           source antenv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Zip artifact for deployment (including venv)
+      - name: Zip artifact for deployment (excluding venv)
         run: |
-          cd insta/insta
-          zip -r ../../release.zip *
+          cd main_dir
+          zip -r ../release.zip . -x "antenv/*" "antenv/**"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4

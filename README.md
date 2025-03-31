@@ -76,7 +76,6 @@ flowchart LR
 
 ```mermaid
 erDiagram
-    USERS ||--o{ CHAT_MESSAGES : sends
     USERS {
         string id PK
         string username
@@ -94,8 +93,6 @@ erDiagram
         string sender_class
         string time
         string timestamp
-        boolean is_filtered
-        string original_image_url
     }
 
     BLOG_POSTS {
@@ -111,14 +108,25 @@ erDiagram
         string original_image_url
     }
 
-    BLOB_STORAGE {
-        string container_name
-        string blob_name
-        string sas_url
+    COMMENTS {
+        string id PK
+        string post_id FK
         string user_id
-        string post_id
+        string username
+        string content
+        string date
+        string date_str
     }
 
-    BLOB_STORAGE ||--o{ BLOG_POSTS : contains
-    BLOB_STORAGE ||--o{ CHAT_MESSAGES : contains
+    BLOB_STORAGE {
+        string container_name
+        string image_url
+        string sas_token
+        string access_level
+    }
+
+    USERS ||--o{ CHAT_MESSAGES : "sends"
+    BLOG_POSTS ||--o{ COMMENTS : "has"
+    BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
+    CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
