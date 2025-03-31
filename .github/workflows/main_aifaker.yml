@@ -20,6 +20,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install Python dependencies
+        run: |
+          cd main_dir
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip freeze  # 👈 설치된 패키지 로그로 확인
+
       - name: Zip artifact for deployment
         run: |
           cd main_dir
