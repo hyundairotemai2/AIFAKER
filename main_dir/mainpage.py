@@ -13,7 +13,8 @@ from azure.cosmos import CosmosClient
 from dotenv import load_dotenv
 import sys
 
-
+# PGD_noise 모듈 임포트
+from PGD_noise import PGDModelDummyGenerator, PGDModelDummyStyleEncoder, PGDModelDummyLPIPS, pgdmodel_attack_on_image
 
 # .env 파일 로드
 load_dotenv()
@@ -54,6 +55,15 @@ sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
+# PGD 모델 전역 초기화
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+PGD_NETS = {
+    "generator": PGDModelDummyGenerator().to(device),
+    "style_encoder": PGDModelDummyStyleEncoder(out_dim=64).to(device),
+}
+PGD_LPIPS_MODEL = PGDModelDummyLPIPS()
+PGD_Y_REF = torch.zeros(1, 3, 256, 256).to(device)  # 기본 참조 텐서 (필요 시 수정 가능)
+
 # 유틸리티 함수
 def generate_unique_id():
     return str(uuid.uuid4())
@@ -70,7 +80,6 @@ def upload_to_blob(file_data, filename, container_client=None, user_id=None, pos
     if container_client is None:
         container_client = blob_container_client
     
-    # 파일명에 사용자 ID와 게시물 ID 포함
     if user_id and post_id:
         filename = f"{user_id}/{post_id}/{filename}"
     elif user_id:
@@ -90,7 +99,7 @@ def upload_to_blob(file_data, filename, container_client=None, user_id=None, pos
     
     return f"{blob_client.url}?{sas_token}"
 
-# 이미지 처리 함수
+# 이미지 처리 함수 (기존 SGN 노이즈)
 def generate_sgn_noise(image_tensor, strength=0.03):
     noise_layers = []
     for scale in [4, 8, 16, 32, 64]:
@@ -106,12 +115,39 @@ def generate_sgn_noise(image_tensor, strength=0.03):
 
 def protect_image(image_data):
     img = Image.open(io.BytesIO(image_data)).convert("RGB")
-    img_tensor = transforms.ToTensor()(img).unsqueeze(0).to("cuda" if torch.cuda.is_available() else "cpu")
+    img_tensor = transforms.ToTensor()(img).unsqueeze(0).to(device)
     noisy_img_tensor = generate_sgn_noise(img_tensor)
     noisy_pil = transforms.ToPILImage()(noisy_img_tensor.squeeze(0).cpu())
     
     buffered = io.BytesIO()
     noisy_pil.save(buffered, format="PNG")
+    return buffered.getvalue()
+
+# PGD 기반 이미지 처리 함수
+def protect_image_pgd(image_data):
+    # 바이트 데이터를 임시 파일로 저장
+    temp_filename = f"temp_{generate_unique_id()}.png"
+    with open(temp_filename, "wb") as f:
+        f.write(image_data)
+    
+    # PGD 공격 수행
+    result_img = pgdmodel_attack_on_image(
+        image_path=temp_filename,
+        nets=PGD_NETS,
+        lpips_model=PGD_LPIPS_MODEL,
+        y_ref=PGD_Y_REF,
+        epsilon=0.05,
+        alpha=0.01,
+        num_iter=5,
+    )
+    
+    # 결과 이미지를 바이트 스트림으로 변환
+    buffered = io.BytesIO()
+    result_img.save(buffered, format="PNG")
+    
+    # 임시 파일 삭제
+    os.remove(temp_filename)
+    
     return buffered.getvalue()
 
 # 블로그 관련 함수
@@ -144,7 +180,7 @@ def save_user(username, password):
         'username': username,
         'password': password,
         'created_at': datetime.now().isoformat(),
-        'role': 'user'  # 사용자 역할 추가
+        'role': 'user'
     }
     cosmos_users_container.create_item(body=user_data)
     return user_id
@@ -180,16 +216,17 @@ def create_post():
     title = request.form["title"]
     content = request.form["content"]
     image = request.files["image"]
-    password = request.form.get("password", "")  # 삭제용 비밀번호
+    password = request.form.get("password", "")
     
-    # 익명 사용자 정보 생성
     anonymous_id = generate_unique_id()
-    
     post_id = generate_unique_id()
     
     if image:
         filename = secure_filename(image.filename)
-        image_url = upload_to_blob(image, filename, user_id=anonymous_id, post_id=post_id)
+        image_data = image.read()
+        # PGD 노이즈 적용 (선택적으로 변경 가능)
+        processed_image_data = protect_image_pgd(image_data)  # 또는 protect_image(image_data) 사용
+        image_url = upload_to_blob(processed_image_data, filename, user_id=anonymous_id, post_id=post_id)
     else:
         image_url = None
         
@@ -201,7 +238,7 @@ def create_post():
         'content': content,
         'image_url': image_url,
         'date': datetime.now().isoformat(),
-        'password': password  # 삭제용 비밀번호 저장
+        'password': password
     }
     
     save_post(post_data)
@@ -232,17 +269,51 @@ def apply_filter():
     if file.filename == "":
         return "파일이 선택되지 않았습니다.", 400
 
-    # 사용자 정보 가져오기
     users = load_users()
     user = users.get(session["username"])
     if not user:
         return "사용자를 찾을 수 없습니다.", 404
 
     file_data = file.read()
-    processed_image_data = protect_image(file_data)
+    processed_image_data = protect_image(file_data)  # 기존 SGN 노이즈
     
     filename = secure_filename(file.filename)
     processed_filename = f"processed_{filename}"
+    image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
+    
+    message_data = {
+        'id': generate_unique_id(),
+        'user_id': user['id'],
+        'username': session["username"],
+        'content': image_url,
+        'type': 'image',
+        'sender_class': 'mymsg',
+        'time': current_time()
+    }
+    
+    save_chat_message(message_data)
+    return jsonify({"status": "success", "image_url": image_url}), 200
+
+@app.route('/apply_filter_pgd', methods=['POST'])
+def apply_filter_pgd():
+    if "username" not in session:
+        return "로그인이 필요합니다.", 401
+    if "file" not in request.files:
+        return "파일이 없습니다.", 400
+    file = request.files["file"]
+    if file.filename == "":
+        return "파일이 선택되지 않았습니다.", 400
+
+    users = load_users()
+    user = users.get(session["username"])
+    if not user:
+        return "사용자를 찾을 수 없습니다.", 404
+
+    file_data = file.read()
+    processed_image_data = protect_image_pgd(file_data)  # PGD 노이즈 적용
+    
+    filename = secure_filename(file.filename)
+    processed_filename = f"pgd_processed_{filename}"
     image_url = upload_to_blob(processed_image_data, processed_filename, blob_chat_images_client, user_id=user['id'])
     
     message_data = {
@@ -267,7 +338,22 @@ def apply_filter_blog():
     try:
         header, encoded = data['image'].split(',', 1)
         image_data = base64.b64decode(encoded)
-        processed_image_data = protect_image(image_data)
+        processed_image_data = protect_image(image_data)  # 기존 SGN 노이즈
+        processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
+        return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/apply_filter_pgd_blog', methods=['POST'])
+def apply_filter_pgd_blog():
+    data = request.get_json()
+    if not data or 'image' not in data:
+        return jsonify({'error': '이미지 데이터가 제공되지 않았습니다.'}), 400
+
+    try:
+        header, encoded = data['image'].split(',', 1)
+        image_data = base64.b64decode(encoded)
+        processed_image_data = protect_image_pgd(image_data)  # PGD 노이즈
         processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
@@ -309,7 +395,6 @@ def send_message():
     if "username" not in session:
         return "로그인이 필요합니다.", 401
         
-    # 사용자 정보 가져오기
     users = load_users()
     user = users.get(session["username"])
     if not user:

@@ -8,6 +8,9 @@ from flask import Flask, request, render_template, send_from_directory, redirect
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+# PGD_noise 모듈 임포트
+from PGD_noise import PGDModelDummyGenerator, PGDModelDummyStyleEncoder, PGDModelDummyLPIPS, pgdmodel_attack_on_image
+
 # UTF-8 인코딩 강제 설정
 sys.stdout.reconfigure(encoding='utf-8')
 
@@ -37,26 +40,40 @@ def set_korean_font():
 
 set_korean_font()
 
-def generate_sgn_noise(image_tensor, strength=0.03):
-    noise_layers = []
-    for scale in [4, 8, 16, 32, 64]:
-        if scale <= image_tensor.shape[2] and scale <= image_tensor.shape[3]:
-            noise = torch.randn(1, 1, scale, scale, device=image_tensor.device)
-            upsampled = torch.nn.functional.interpolate(
-                noise, size=(image_tensor.shape[2], image_tensor.shape[3]), mode='bilinear', align_corners=False
-            )
-            noise_layers.append(upsampled)
-    combined_noise = sum(noise_layers) / len(noise_layers)
-    noisy_image = image_tensor + combined_noise.expand_as(image_tensor) * strength
-    return torch.clamp(noisy_image, 0, 1)
+# PGD 모델 초기화 (한 번만 수행)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+nets = {
+    "generator": PGDModelDummyGenerator(),
+    "style_encoder": PGDModelDummyStyleEncoder(out_dim=64)
+}
+lpips_model = PGDModelDummyLPIPS()
 
 def protect_image(image_path, noise_level=0.03):
+    # PGD 공격을 사용하여 이미지 보호
     img = Image.open(image_path).convert("RGB")
-    img_tensor = transforms.ToTensor()(img).unsqueeze(0).to("cuda" if torch.cuda.is_available() else "cpu")
-    noisy_img_tensor = generate_sgn_noise(img_tensor, noise_level)
-    noisy_pil = transforms.ToPILImage()(noisy_img_tensor.squeeze(0).cpu())
+    img_tensor = transforms.ToTensor()(img).unsqueeze(0).to(device)
+    
+    # y_ref는 더미 텐서로 설정 (필요에 따라 사용자 입력으로 대체 가능)
+    y_ref = torch.zeros_like(img_tensor).to(device)
+    
+    # PGD 공격 수행
+    result_img = pgdmodel_attack_on_image(
+        image_path,
+        nets,
+        lpips_model,
+        y_ref,
+        epsilon=noise_level,  # 노이즈 강도
+        alpha=0.01,
+        num_iter=5,
+        lam_transfer=1.0,
+        lam_vis=10.0,
+        lam_lpips=5.0,
+        lam_style=5.0
+    )
+    
+    # 결과 이미지를 저장
     output_path = os.path.join(OUTPUT_FOLDER, os.path.basename(image_path))
-    noisy_pil.save(output_path)
+    result_img.save(output_path)
     return output_path
 
 def load_users():
@@ -82,7 +99,7 @@ def current_time():
 
 @app.route("/")
 def home():
-    return redirect(url_for("login"))  # 항상 로그인 페이지로 리다이렉트
+    return redirect(url_for("login"))
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
