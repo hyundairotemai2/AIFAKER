@@ -1,21 +1,60 @@
+name: Build and deploy Python app to Azure Web App - AIFAKER
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest
     permissions:
-      id-token: write
       contents: read
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python version
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      # 🔻 기존 설치 단계 삭제됨
+
+      - name: Zip artifact for deployment
+        run: |
+          cd main_dir
+          zip -r ../release.zip * -x "__pycache__/*" "*.pyc" ".python_packages/*" "antenv/*"
+
+      - name: Upload artifact for deployment jobs
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-app
+          path: release.zip
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
     environment:
       name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
+    permissions:
+      id-token: write
+      contents: read
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - name: Download artifact from build job
+        uses: actions/download-artifact@v4
+        with:
+          name: python-app
+          path: ./artifacts
 
-      - name: Zip for deployment
+      - name: Unzip artifact for deployment
         run: |
-          cd main_dir
-          zip -r ../app.zip * -x "__pycache__/*" "*.pyc" "antenv/*"
+          mkdir -p deploy_dir
+          unzip ./artifacts/release.zip -d deploy_dir
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -28,4 +67,4 @@ jobs:
         with:
           app-name: "AIFAKER"
           slot-name: "Production"
-          package: ./app.zip
+          package: ./deploy_dir
