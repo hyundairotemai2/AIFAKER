@@ -31,33 +31,35 @@ gantt
 
 ```mermaid
 flowchart LR
+    %% 개발 단계
     Engineer["👨‍💻 개발자 (Engineer)"]
     IDE["🧱 VSCode (IDE)"]
     Codebase["📂 코드베이스 (Project Structure)"]
 
+    %% 핵심 구성 요소 - 같은 수평 라인
     Model["🧪 노이즈 모델 (Noise_model)"]
-    Frontend["🎨 프론트엔드 (Front_end)"]
     Backend["⚙️ Flask 앱 (Webapplication)"]
+    Frontend["🎨 프론트엔드 (Front_end)"]
 
+    %% 배포 파이프라인
     GitHub["🌐 GitHub (Remote Repository)"]
     Actions["🔄 GitHub Actions (CI/CD Tool)"]
     Azure["☁️ Azure (Webserver)"]
     Customer["🙋 사용자 (Customer)"]
 
     %% 개발 흐름
-    Engineer --> IDE
-    IDE --> Codebase
-    Codebase --> Model
-    Codebase --> Frontend
-    Codebase --> Backend
+    Engineer --> IDE --> Codebase
 
-    %% 노이즈 모델, 프론트엔드 → Flask 앱 연결
+    %% 코드베이스로부터 분기
+    Codebase --> Model
+    Codebase --> Backend
+    Codebase --> Frontend
+
+    %% GitHub으로 연결 (Flask 앱 중심 통합)
     Model --> Backend
     Frontend --> Backend
-
-    %% Flask 앱 → GitHub 및 이후 배포
     Backend --> GitHub
-    GitHub --> Actions
-    Actions --> Azure
-    Azure --> Customer
+
+    %% 배포 흐름
+    GitHub --> Actions --> Azure --> Customer
 ```
