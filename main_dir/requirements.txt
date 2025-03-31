@@ -9,3 +9,5 @@ torchvision
 diffusers
 matplotlib
 azure-cosmos
+azure-storage-blob
+python-dotenv
