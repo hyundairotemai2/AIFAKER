@@ -23,18 +23,18 @@ jobs:
       - name: Set up virtual environment and install dependencies
         run: |
           set -e
-          cd insta/insta
+          cd main_dir
           python -m venv venv
-          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/insta/insta/venv" >> $GITHUB_ENV
-          echo "$GITHUB_WORKSPACE/insta/insta/venv/bin" >> $GITHUB_PATH
+          echo "VIRTUAL_ENV=$GITHUB_WORKSPACE/main_dir/venv" >> $GITHUB_ENV
+          echo "$GITHUB_WORKSPACE/main_dir/venv/bin" >> $GITHUB_PATH
           source venv/bin/activate
           pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Zip artifact for deployment
         run: |
-          cd insta/insta
-          zip -r ../../release.zip * -x "venv/*" "__pycache__/*" "*.pyc"
+          cd main_dir
+          zip -r ../release.zip * -x "venv/*" "__pycache__/*" "*.pyc"
 
       - name: Upload artifact for deployment jobs
         uses: actions/upload-artifact@v4
