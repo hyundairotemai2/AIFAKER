@@ -31,35 +31,30 @@ gantt
 
 ```mermaid
 flowchart LR
-    %% 개발 단계
-    Engineer["👨‍💻 개발자 (Engineer)"]
-    IDE["🧱 VSCode (IDE)"]
-    Codebase["📂 코드베이스 (Project Structure)"]
+    %% 개발자 → IDE → 코드베이스
+    Engineer["👨‍💻 개발자 (Engineer)"] --> IDE["🧱 VSCode (IDE)"]
+    IDE --> Codebase["📂 코드베이스 (Project Structure)"]
 
-    %% 핵심 구성 요소 - 같은 수평 라인
-    Model["🧪 노이즈 모델 (Noise_model)"]
-    Backend["⚙️ Flask 앱 (Webapplication)"]
-    Frontend["🎨 프론트엔드 (Front_end)"]
+    %% 수평 정렬: 모델 / 백엔드 / 프론트엔드
+    subgraph Components[ ]
+        direction LR
+        Model["🧪 노이즈 모델 (Noise_model)"]
+        Backend["⚙️ Flask 앱 (Webapplication)"]
+        Frontend["🎨 프론트엔드 (Front_end)"]
+    end
 
-    %% 배포 파이프라인
-    GitHub["🌐 GitHub (Remote Repository)"]
-    Actions["🔄 GitHub Actions (CI/CD Tool)"]
-    Azure["☁️ Azure (Webserver)"]
-    Customer["🙋 사용자 (Customer)"]
-
-    %% 개발 흐름
-    Engineer --> IDE --> Codebase
-
-    %% 코드베이스로부터 분기
+    %% 코드베이스 → 구성 요소
     Codebase --> Model
     Codebase --> Backend
     Codebase --> Frontend
 
-    %% GitHub으로 연결 (Flask 앱 중심 통합)
+    %% 구성 요소 연결
     Model --> Backend
     Frontend --> Backend
-    Backend --> GitHub
 
-    %% 배포 흐름
-    GitHub --> Actions --> Azure --> Customer
+    %% 백엔드 → GitHub → 배포
+    Backend --> GitHub["🌐 GitHub (Remote Repository)"]
+    GitHub --> Actions["🔄 GitHub Actions (CI/CD Tool)"]
+    Actions --> Azure["☁️ Azure (Webserver)"]
+    Azure --> Customer["🙋 사용자 (Customer)"]
 ```
