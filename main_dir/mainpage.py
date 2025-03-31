@@ -273,6 +273,24 @@ def apply_filter():
     save_chat_message(message_data)
     return jsonify({"status": "success", "image_url": image_url}), 200
 
+
+@app.route('/comments/<string:post_id>', methods=['POST'])
+def add_comment(post_id):
+    content = request.json.get('content')
+    if not content:
+        return jsonify({'success': False, 'error': '내용이 없습니다.'}), 400
+
+    comment_data = {
+        'id': generate_unique_id(),
+        'post_id': post_id,
+        'content': content,
+        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M'),
+        'username': '익명'  # 필요 시 사용자 인증 추가
+    }
+    cosmos_container.create_item(body=comment_data)  # 동일 컨테이너 사용, 별도 컨테이너 필요 시 수정
+    return jsonify({'success': True, 'comment': comment_data})
+
+
 @app.route('/apply_filter_blog', methods=['POST'])
 def apply_filter_blog():
     data = request.get_json()
