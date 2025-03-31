@@ -27,6 +27,8 @@ gantt
     테스트 :2025-03-22, 4d
 ```
 
+## 🗂️ 시스템 아키텍처
+
 ```mermaid
 flowchart LR
     Engineer["👨‍💻 개발자 (Engineer)"]
