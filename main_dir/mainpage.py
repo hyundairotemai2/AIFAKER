@@ -118,7 +118,7 @@ def generate_sgn_noise(image_tensor, strength=0.03):
     return torch.clamp(noisy_image, 0, 1)
 
 def protect_image(image_data):
-    img = Image.open(io.BytesIO(image_data)).convert("RGB")
+    img = Image.open(io.BytesIO(image_data)).convert("L")
     img_tensor = transforms.ToTensor()(img).unsqueeze(0).to("cuda" if torch.cuda.is_available() else "cpu")
     noisy_img_tensor = generate_sgn_noise(img_tensor)
     noisy_pil = transforms.ToPILImage()(noisy_img_tensor.squeeze(0).cpu())
@@ -171,11 +171,25 @@ def main():
 def blog():
     posts = get_posts()
     for post in posts:
-        post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+        # 날짜 처리
+        if 'date' in post:
+            try:
+                post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+            except (ValueError, TypeError):
+                post['date'] = '날짜 없음'
+        else:
+            post['date'] = '날짜 없음'
+            
         # 각 게시글의 댓글 수 가져오기
         comments_query = f"SELECT VALUE COUNT(1) FROM c WHERE c.post_id = '{post['id']}'"
         comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
         post['comment_count'] = comments[0] if comments else 0
+        
+        # 이미지 URL 설정
+        if post.get('is_filtered'):
+            post['image_url'] = post.get('image_url')  # 필터 처리된 이미지
+        else:
+            post['image_url'] = post.get('original_image_url')  # 원본 이미지
     return render_template('blog.html', posts=posts)
 
 @app.route('/post/<string:post_id>')
@@ -184,20 +198,34 @@ def post(post_id):
     posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
     if posts:
         post = posts[0]
-        post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
-        # 필터 처리된 이미지 URL 사용
-        if post.get('is_filtered'):
-            post['display_image_url'] = post['image_url']
-            post['original_image_url'] = post.get('original_image_url')
+        # 날짜 처리
+        if 'date' in post:
+            try:
+                post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+            except (ValueError, TypeError):
+                post['date'] = '날짜 없음'
         else:
-            post['display_image_url'] = post['image_url']
+            post['date'] = '날짜 없음'
+        
+        # 이미지 URL 설정
+        if post.get('is_filtered'):
+            post['display_image_url'] = post.get('image_url')  # 필터 처리된 이미지
+            post['original_image_url'] = post.get('original_image_url')  # 원본 이미지
+        else:
+            post['display_image_url'] = post.get('original_image_url')  # 원본 이미지
             post['original_image_url'] = None
             
         # 댓글 목록 가져오기
         comments_query = f"SELECT * FROM c WHERE c.post_id = '{post_id}' ORDER BY c.date DESC"
         comments = list(cosmos_comments_container.query_items(query=comments_query, enable_cross_partition_query=True))
         for comment in comments:
-            comment['date_str'] = datetime.fromisoformat(comment['date']).strftime('%Y-%m-%d %H:%M')
+            if 'date' in comment:
+                try:
+                    comment['date_str'] = datetime.fromisoformat(comment['date']).strftime('%Y-%m-%d %H:%M')
+                except (ValueError, TypeError):
+                    comment['date_str'] = '날짜 없음'
+            else:
+                comment['date_str'] = '날짜 없음'
             
         return render_template('post_detail.html', post=post, comments=comments)
     return "게시물을 찾을 수 없습니다.", 404

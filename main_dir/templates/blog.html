@@ -8,8 +8,16 @@
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Raleway">
 <style>
 body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
-.image-container { position: relative; display: inline-block; width: 100%; }
-.post-image { width: 100%; }
+.image-container { 
+    position: relative; 
+    display: inline-block; 
+    width: 100%; 
+}
+.post-image { 
+    width: 100%; 
+    max-height: 400px;
+    object-fit: cover;
+}
 .loading-overlay {
   display: none;
   position: absolute;
@@ -24,12 +32,12 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   font-size: 20px;
 }
 .header-container {
-  position: relative;
+    position: relative;
 }
 .back-button {
-  position: absolute;
-  top: 10px;
-  right: 10px; /* 오른쪽 위에 배치 */
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 </style>
 </head>
@@ -53,10 +61,11 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       <div class="w3-card-4 w3-margin w3-white">
         {% if post.image_url %}
           <div class="image-container">
-            <img src="{{ post.filtered_image_url if post.apply_filter else post.image_url }}" 
+            <img src="{{ post.image_url }}" 
                  class="post-image" 
-                 data-filtered="{{ post.filtered_image_url if post.apply_filter else '' }}" 
-                 data-apply-filter="{{ 'true' if post.apply_filter and not post.filter_applied else 'false' }}">
+                 data-filtered="{{ post.image_url }}"
+                 data-apply-filter="{{ 'true' if post.is_filtered else 'false' }}"
+                 alt="게시글 이미지">
             <div class="loading-overlay">로딩 중...</div>
           </div>
         {% endif %}
