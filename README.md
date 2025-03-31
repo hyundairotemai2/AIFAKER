@@ -44,16 +44,19 @@ flowchart LR
     Azure["☁️ Azure (Webserver)"]
     Customer["🙋 사용자 (Customer)"]
 
+    %% 개발 흐름
     Engineer --> IDE
     IDE --> Codebase
     Codebase --> Model
     Codebase --> Frontend
     Codebase --> Backend
 
-    Model --> GitHub
-    Frontend --> GitHub
-    Backend --> GitHub
+    %% 노이즈 모델, 프론트엔드 → Flask 앱 연결
+    Model --> Backend
+    Frontend --> Backend
 
+    %% Flask 앱 → GitHub 및 이후 배포
+    Backend --> GitHub
     GitHub --> Actions
     Actions --> Azure
     Azure --> Customer
