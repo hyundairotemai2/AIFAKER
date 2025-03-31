@@ -31,30 +31,42 @@ gantt
 
 ```mermaid
 flowchart LR
-    %% 개발자 → IDE → 코드베이스
-    Engineer["👨‍💻 개발자 (Engineer)"] --> IDE["🧱 VSCode (IDE)"]
-    IDE --> Codebase["📂 코드베이스 (Project Structure)"]
+    Engineer["👨‍💻 개발자<br/>(Engineer)"]
+    IDE["🧱 VSCode<br/>(IDE)"]
+    Codebase["📂 코드베이스<br/>(Project Structure)"]
 
-    %% 수평 정렬: 모델 / 백엔드 / 프론트엔드
-    subgraph Components[ ]
-        direction LR
-        Model["🧪 노이즈 모델 (Noise_model)"]
-        Backend["⚙️ Flask 앱 (Webapplication)"]
-        Frontend["🎨 프론트엔드 (Front_end)"]
-    end
+    Model["🧪 노이즈 모델<br/>(Noise_model)"]
+    Frontend["🎨 프론트엔드<br/>(Front_end)"]
+    Backend["⚙️ Flask 앱<br/>(Webapplication)"]
 
-    %% 코드베이스 → 구성 요소
+    GitHub["🌐 GitHub<br/>(Remote Repository)"]
+    Actions["🔄 GitHub Actions<br/>(CI/CD Tool)"]
+    Azure["☁️ Azure<br/>(Webserver)"]
+    Customer["🙋 사용자<br/>(Customer)"]
+
+    Engineer --> IDE
+    IDE --> Codebase
     Codebase --> Model
-    Codebase --> Backend
     Codebase --> Frontend
+    Codebase --> Backend
 
-    %% 구성 요소 연결
-    Model --> Backend
-    Frontend --> Backend
+    Model --> GitHub
+    Frontend --> GitHub
+    Backend --> GitHub
 
-    %% 백엔드 → GitHub → 배포
-    Backend --> GitHub["🌐 GitHub (Remote Repository)"]
-    GitHub --> Actions["🔄 GitHub Actions (CI/CD Tool)"]
-    Actions --> Azure["☁️ Azure (Webserver)"]
-    Azure --> Customer["🙋 사용자 (Customer)"]
+    GitHub --> Actions
+    Actions --> Azure
+    Azure --> Customer
+
+    %% ✅ 클래스 정의 (노드 색상)
+    classDef dev fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
+    classDef code fill:#fffbe6,stroke:#faad14,stroke-width:2px;
+    classDef infra fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
+    classDef deploy fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
+
+    %% ✅ 클래스 적용
+    class Engineer,IDE dev;
+    class Codebase,Model,Frontend,Backend code;
+    class GitHub,Actions infra;
+    class Azure,Customer deploy;
 ```
