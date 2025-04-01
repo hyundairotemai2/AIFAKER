@@ -31,41 +31,44 @@ gantt
 
 ```mermaid
 flowchart LR
-    %% 👨‍💻 개발자
+    %% 👨‍💻 개발자 상세 구성
     subgraph Developer ["👨‍💻 개발자"]
-        dev(["💾 코드 푸시"])
+        dev1(["🧪 StarGAN-v2<br/>노이즈 모델 구현"])
+        dev2(["🎨 Flask 앱<br/>제어 UI 및 API 개발"])
+        dev3(["💾 코드 푸시"])
+        dev1 --> dev3
+        dev2 --> dev3
     end
 
-    %% 🛠️ GitHub Actions CI/CD
+    %% CI/CD
     subgraph GitHub_CI_CD ["🛠️ GitHub Actions (CI/CD)"]
-        repo["📁 GitHub<br/>리포지토리"]
+        repo["📁 GitHub<br/>Noise Model + Flask Web"]
         workflow["⚙️ 빌드/테스트<br/>+ 배포"]
         repo --> workflow
     end
 
-    %% ☁️ Azure 클라우드
+    %% Azure
     subgraph Azure_Cloud ["☁️ Azure 클라우드"]
         subgraph App_Service ["🚀 Azure App Service (Linux)"]
-            app["🌐 Flask 웹 앱"]
+            app["🌐 Flask 웹 앱<br/>(제어 패널 + API)"]
         end
         db["🗄️ Cosmos DB"]
         kv["🔐 Key Vault"]
     end
 
-    %% 🙋 사용자
-    user(["🙋 사용자<br/>클라이언트"]) -->|🌐 HTTP 요청| app
-    app -->|📡 데이터 요청/응답| db
+    user(["🙋 사용자"]) -->|🌐 요청| app
+    app -->|📡 예측 및 데이터| db
     app -->|🔑 시크릿 참조| kv
-    dev -->|🔁 커밋/푸시| repo
+    dev3 -->|🔁 코드 반영| repo
     workflow -->|🔐 인증 및 배포| app
 
-    %% 🎨 스타일링
+    %% 스타일
     classDef developer fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
     classDef github fill:#fffbe6,stroke:#faad14,stroke-width:2px;
     classDef azure fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
     classDef user fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
 
-    class dev developer;
+    class dev1,dev2,dev3 developer;
     class repo,workflow github;
     class app,db,kv azure;
     class user user;
