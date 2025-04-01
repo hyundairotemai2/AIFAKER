@@ -140,23 +140,27 @@ def protect_image(image_data):
 # PGD 기반 이미지 처리 함수
 def protect_image_pgd(image_data):
     temp_filename = f"temp_{generate_unique_id()}.png"
-    with open(temp_filename, "wb") as f:
-        f.write(image_data)
-    
-    result_img = pgdmodel_attack_on_image(
-        image_path=temp_filename,
-        nets=PGD_NETS,
-        lpips_model=PGD_LPIPS_MODEL,
-        y_ref=PGD_Y_REF,
-        epsilon=0.05,
-        alpha=0.01,
-        num_iter=5,
-    )
-    
-    buffered = io.BytesIO()
-    result_img.save(buffered, format="PNG")
-    os.remove(temp_filename)
-    return buffered.getvalue()
+    try:
+        with open(temp_filename, "wb") as f:
+            f.write(image_data)
+        
+        result_img = pgdmodel_attack_on_image(
+            image_path=temp_filename,
+            nets=PGD_NETS,
+            lpips_model=PGD_LPIPS_MODEL,
+            y_ref=PGD_Y_REF,
+            epsilon=0.05,
+            alpha=0.01,
+            num_iter=5,
+        )
+        
+        buffered = io.BytesIO()
+        result_img.save(buffered, format="PNG")
+        os.remove(temp_filename)
+        return buffered.getvalue()
+    except Exception as e:
+        print(f"Error in protect_image_pgd: {str(e)}")
+        raise
 
 # 블로그 관련 함수
 def get_posts():
@@ -226,11 +230,16 @@ def blog():
 
 @app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
 def mark_filter_applied(post_id):
+    data = request.get_json() or {}
+    filtered_image_url = data.get('filtered_image_url')
+    
     query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
     posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
     if posts:
         post = posts[0]
         post['filter_applied'] = True
+        if filtered_image_url:
+            post['filtered_image_url'] = filtered_image_url
         post['image_url'] = post.get('filtered_image_url') or post.get('image_url')
         cosmos_container.replace_item(item=post, body=post)
         return jsonify({'success': True})
@@ -297,15 +306,7 @@ def create_post():
         filename = secure_filename(image.filename)
         image_data = image.read()
         original_image_url = upload_to_blob(image_data, filename, user_id=anonymous_id, post_id=post_id)
-
-        if apply_filter:
-            # PGD 필터 적용
-            filtered_image_data = protect_image_pgd(image_data)
-            filtered_filename = f"pgd_filtered_{filename}"
-            filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
-            image_url = filtered_image_url
-        else:
-            image_url = original_image_url
+        image_url = original_image_url  # 초기에는 원본 이미지 URL만 설정
 
     post_data = {
         'id': post_id,
@@ -315,9 +316,9 @@ def create_post():
         'content': content,
         'image_url': image_url,
         'original_image_url': original_image_url if image else None,
-        'filtered_image_url': filtered_image_url if apply_filter else None,
-        'apply_filter': apply_filter,
-        'filter_applied': False if apply_filter else True,
+        'filtered_image_url': None,  # 필터링된 URL은 아직 설정하지 않음
+        'apply_filter': apply_filter,  # 필터 적용 여부만 저장
+        'filter_applied': False,  # 필터가 아직 적용되지 않음
         'date': datetime.now().isoformat(),
         'password': password
     }
@@ -433,6 +434,26 @@ def apply_filter_pgd():
     save_chat_message(message_data)
     return jsonify({"status": "success", "image_url": image_url}), 200
 
+@app.route('/apply_filter_pgd_blog', methods=['POST'])
+def apply_filter_pgd_blog():
+    data = request.get_json()
+    if not data or 'image' not in data:
+        return jsonify({'error': '이미지 데이터가 제공되지 않았습니다.'}), 400
+
+    try:
+        header, encoded = data['image'].split(',', 1)
+        image_data = base64.b64decode(encoded)
+        print(f"Received image data size: {len(image_data)} bytes")  # 디버깅 로그
+        
+        processed_image_data = protect_image_pgd(image_data)
+        processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
+        print("Filter applied successfully")  # 성공 로그
+        
+        return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
+    except Exception as e:
+        print(f"Error in apply_filter_pgd_blog: {str(e)}")  # 오류 로그
+        return jsonify({'error': f"필터 적용 중 오류: {str(e)}"}), 500
+    
 @app.route('/apply_filter_blog', methods=['POST'])
 def apply_filter_blog():
     data = request.get_json()
@@ -448,20 +469,6 @@ def apply_filter_blog():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
-@app.route('/apply_filter_pgd_blog', methods=['POST'])
-def apply_filter_pgd_blog():
-    data = request.get_json()
-    if not data or 'image' not in data:
-        return jsonify({'error': '이미지 데이터가 제공되지 않았습니다.'}), 400
-
-    try:
-        header, encoded = data['image'].split(',', 1)
-        image_data = base64.b64decode(encoded)
-        processed_image_data = protect_image_pgd(image_data)
-        processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
-        return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
 
 @app.route('/login', methods=["GET", "POST"])
 def login():
@@ -525,6 +532,7 @@ def send_message():
 def logout():
     session.pop("username", None)
     return redirect(url_for("main"))
+
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
