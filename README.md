@@ -31,45 +31,47 @@ gantt
 
 ```mermaid
 flowchart LR
-    Engineer["👨‍💻 개발자<br/>(Engineer)"]
-    IDE["🧱 VSCode<br/>(IDE)"]
-    Codebase["📂 코드베이스<br/>(Project Structure)"]
+    %% 👨‍💻 개발자 상세 구성
+    subgraph Developer ["👨‍💻 개발자"]
+        dev1(["🧪 StarGAN-v2<br/>노이즈 모델 구현"])
+        dev2(["🎨 Flask 앱<br/>제어 UI 및 API 개발"])
+        dev3(["💾 코드 푸시"])
+        dev1 --> dev3
+        dev2 --> dev3
+    end
 
-    Model["🧪 노이즈 모델<br/>(Noise_model)"]
-    Frontend["🎨 프론트엔드<br/>(Front_end)"]
-    Backend["⚙️ Flask 앱<br/>(Webapplication)"]
+    %% CI/CD
+    subgraph GitHub_CI_CD ["🛠️ GitHub Actions (CI/CD)"]
+        repo["📁 GitHub<br/>Noise Model + Flask Web"]
+        workflow["⚙️ 빌드/테스트<br/>+ 배포"]
+        repo --> workflow
+    end
 
-    GitHub["🌐 GitHub<br/>(Remote Repository)"]
-    Actions["🔄 GitHub Actions<br/>(CI/CD Tool)"]
-    Azure["☁️ Azure<br/>(Webserver)"]
-    Customer["🙋 사용자<br/>(Customer)"]
+    %% Azure
+    subgraph Azure_Cloud ["☁️ Azure 클라우드"]
+        subgraph App_Service ["🚀 Azure App Service (Linux)"]
+            app["🌐 Flask 웹 앱<br/>(제어 패널 + API)"]
+        end
+        db["🗄️ Cosmos DB"]
+        kv["🔐 Key Vault"]
+    end
 
-    Engineer --> IDE
-    IDE --> Codebase
-    Codebase --> Model
-    Codebase --> Frontend
-    Codebase --> Backend
+    user(["🙋 사용자"]) -->|🌐 요청| app
+    app -->|📡 예측 및 데이터| db
+    app -->|🔑 시크릿 참조| kv
+    dev3 -->|🔁 코드 반영| repo
+    workflow -->|🔐 인증 및 배포| app
 
-    Model --> GitHub
-    Frontend --> GitHub
-    Backend --> GitHub
+    %% 스타일
+    classDef developer fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
+    classDef github fill:#fffbe6,stroke:#faad14,stroke-width:2px;
+    classDef azure fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
+    classDef user fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
 
-    GitHub --> Actions
-    Actions --> Azure
-    Azure --> Customer
-
-    %% ✅ 클래스 정의 (노드 색상)
-    classDef dev fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
-    classDef code fill:#fffbe6,stroke:#faad14,stroke-width:2px;
-    classDef infra fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
-    classDef deploy fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
-
-    %% ✅ 클래스 적용
-    class Engineer,IDE dev;
-    class Codebase,Model,Frontend,Backend code;
-    class GitHub,Actions infra;
-    class Azure,Customer deploy;
-
+    class dev1,dev2,dev3 developer;
+    class repo,workflow github;
+    class app,db,kv azure;
+    class user user;
 ```
 
 ##  데이터베이스 아키텍처
@@ -130,3 +132,6 @@ erDiagram
     BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
     CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
+
+##  노이즈 단계별 이미지 검증 결과
+![노이즈 단계별 이미지 검증 결과](https://github.com/user-attachments/assets/a07be288-b4ea-4dea-a116-3b32af515e61)
