@@ -9,51 +9,41 @@ env:
   AZURE_WEBAPP_NAME: AIFAKER
   AZURE_RESOURCE_GROUP: AIFAKER_group
   IMAGE_NAME: aifaker-app
-  DOCKER_CONTEXT: ./main_dir
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: 📥 Checkout repository
         uses: actions/checkout@v3
 
-      - name: Docker Login to ACR
+      - name: 🔐 Log in to Azure Container Registry (ACR)
         run: echo "${{ secrets.AZURE_ACR_PASSWORD }}" | docker login ${{ secrets.AZURE_ACR_LOGIN_SERVER }} -u ${{ secrets.AZURE_ACR_USERNAME }} --password-stdin
 
-      - name: Build Docker image
+      - name: 🛠️ Build Docker image
         run: |
-          docker build -t ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest $DOCKER_CONTEXT
+          docker build -t ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest ./main_dir
 
-      - name: Push Docker image to ACR
+      - name: 🚀 Push Docker image to ACR
         run: |
-          docker push ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest
+          docker push ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
 
-      - name: Azure Login
+      - name: ☁️ Azure CLI login
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Deploy to Azure Web App (via container config)
+      - name: ⚙️ Configure Azure Web App with ACR image
         run: |
           az webapp config container set \
             --name $AZURE_WEBAPP_NAME \
             --resource-group $AZURE_RESOURCE_GROUP \
-            --docker-custom-image-name ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/$IMAGE_NAME:latest \
+            --docker-custom-image-name ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
             --docker-registry-server-url https://${{ secrets.AZURE_ACR_LOGIN_SERVER }} \
             --docker-registry-server-user ${{ secrets.AZURE_ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.AZURE_ACR_PASSWORD }}
 
-      - name: Set required App Settings
+      - name: 🔄 Restart Azure Web App
         run: |
-          az webapp config appsettings set \
-            --name $AZURE_WEBAPP_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP \
-            --settings WEBSITES_PORT=8000 WEBSITES_ENABLE_APP_SERVICE_STORAGE=false
-
-      - name: Restart Azure Web App
-        run: |
-          az webapp restart \
-            --name $AZURE_WEBAPP_NAME \
-            --resource-group $AZURE_RESOURCE_GROUP
+          az webapp restart --name $AZURE_WEBAPP_NAME --resource-group $AZURE_RESOURCE_GROUP
