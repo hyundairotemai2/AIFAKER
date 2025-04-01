@@ -67,7 +67,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   document.getElementById('write-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
-    const applyFilter = confirm("필터를 적용하시겠습니까? (필터가 적용됩니다)");
+    const applyFilter = confirm("필터를 적용하시겠습니까? (PGD 필터가 적용됩니다)");
     formData.append('apply_filter', applyFilter ? 'true' : 'false');
     
     fetch('/create_post', {
@@ -84,7 +84,7 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
       alert('오류가 발생했습니다.');
     });
   });
-  </script>
+</script>
 
 </body>
 </html>

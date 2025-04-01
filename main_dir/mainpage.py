@@ -309,6 +309,13 @@ def create_post():
         original_image_url = upload_to_blob(image_data, filename, user_id=anonymous_id, post_id=post_id)
         image_url = original_image_url  # 초기에는 원본 이미지 URL만 설정
 
+        if apply_filter:
+            # PGD 필터 적용
+            filtered_image_data = protect_image_pgd(image_data)
+            filtered_filename = f"pgd_filtered_{filename}"
+            filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
+            image_url = filtered_image_url  # 필터링된 이미지를 기본 이미지로 설정
+
     post_data = {
         'id': post_id,
         'user_id': anonymous_id,
@@ -317,9 +324,9 @@ def create_post():
         'content': content,
         'image_url': image_url,
         'original_image_url': original_image_url if image else None,
-        'filtered_image_url': None,  # 필터링된 URL은 아직 설정하지 않음
-        'apply_filter': apply_filter,  # 필터 적용 여부만 저장
-        'filter_applied': False,  # 필터가 아직 적용되지 않음
+        'filtered_image_url': filtered_image_url if apply_filter and image else None,
+        'apply_filter': apply_filter,
+        'filter_applied': apply_filter,  # 필터가 적용되었으면 True로 설정
         'date': datetime.now().isoformat(),
         'password': password
     }
