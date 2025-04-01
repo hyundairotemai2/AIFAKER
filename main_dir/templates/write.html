@@ -11,25 +11,29 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
 .image-container { position: relative; display: inline-block; width: 100%; }
 .post-image { width: 100%; }
 .loading-overlay {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 20px;
+    display: none; /* 기본적으로 숨김 */
+    position: fixed; /* 페이지 전체에 고정 */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 24px;
+    z-index: 1000; /* 다른 요소 위에 표시 */
+}
+.loading-overlay.active {
+    display: flex; /* 활성화 시 표시 */
 }
 .header-container {
-  position: relative;
+    position: relative;
 }
 .back-button {
-  position: absolute;
-  top: 10px;
-  right: 10px;
+    position: absolute;
+    top: 10px;
+    right: 10px;
 }
 </style>
 </head>
@@ -61,29 +65,52 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
   </div>
 </div>
 
+<!-- 로딩 오버레이 -->
+<div id="loading-overlay" class="loading-overlay">
+    로딩 중...
+</div>
+
 <footer class="w3-container w3-dark-grey w3-padding-32 w3-margin-top"></footer>
 
 <script>
-  document.getElementById('write-form').addEventListener('submit', function(e) {
+document.getElementById('write-form').addEventListener('submit', function(e) {
     e.preventDefault();
     const formData = new FormData(this);
     const applyFilter = confirm("필터를 적용하시겠습니까? (PGD 필터가 적용됩니다)");
     formData.append('apply_filter', applyFilter ? 'true' : 'false');
     
+    const overlay = document.getElementById('loading-overlay');
+    
+    // 필터를 적용할 경우에만 오버레이 표시
+    if (applyFilter) {
+        console.log('Showing loading overlay for filter application');
+        overlay.classList.add('active');
+    }
+
     fetch('/create_post', {
-      method: 'POST',
-      body: formData
-    }).then(response => {
-      if (response.ok) {
-        window.location.href = '/blog';
-      } else {
-        alert('게시물 작성에 실패했습니다.');
-      }
-    }).catch(error => {
-      console.error('Error:', error);
-      alert('오류가 발생했습니다.');
+        method: 'POST',
+        body: formData
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('Post created successfully');
+            window.location.href = '/blog';
+        } else {
+            throw new Error('게시물 작성에 실패했습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('오류가 발생했습니다: ' + error.message);
+    })
+    .finally(() => {
+        // 요청 완료 후 오버레이 숨김
+        if (overlay.classList.contains('active')) {
+            console.log('Hiding loading overlay');
+            overlay.classList.remove('active');
+        }
     });
-  });
+});
 </script>
 
 </body>

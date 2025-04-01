@@ -19,17 +19,20 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
     object-fit: cover;
 }
 .loading-overlay {
-  display: none;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.5);
-  justify-content: center;
-  align-items: center;
-  color: white;
-  font-size: 20px;
+    display: none; /* 기본적으로 숨김 */
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    justify-content: center;
+    align-items: center;
+    color: white;
+    font-size: 20px;
+}
+.loading-overlay.active {
+    display: flex; /* 활성화 시 표시 */
 }
 .header-container {
     position: relative;
@@ -128,30 +131,44 @@ document.addEventListener('DOMContentLoaded', function() {
     const applyFilter = img.getAttribute('data-apply-filter') === 'true';
     const filterApplied = img.getAttribute('data-filter-applied') === 'true';
     const postId = img.getAttribute('data-post-id');
+    const overlay = img.parentElement.querySelector('.loading-overlay');
+
+    console.log(`Processing post ${postId}: applyFilter=${applyFilter}, filterApplied=${filterApplied}`);
+
+    // 초기 오버레이 상태 확인
+    console.log(`Initial overlay display: ${overlay.style.display}`);
 
     if (applyFilter && !filterApplied) {
-      const overlay = img.parentElement.querySelector('.loading-overlay');
-      overlay.style.display = 'flex'; // 로딩 오버레이 표시
+      console.log(`Applying filter to post ${postId}`);
+      overlay.classList.add('active'); // 오버레이 표시
 
-      // PGD 필터를 적용하기 위해 원본 이미지를 서버로 전송
       fetch(img.src)
-        .then(response => response.blob())
+        .then(response => {
+          console.log(`Fetch image response status: ${response.status}`);
+          if (!response.ok) throw new Error('Failed to fetch image');
+          return response.blob();
+        })
         .then(blob => {
           const reader = new FileReader();
           reader.onloadend = function() {
             const base64data = reader.result;
+            console.log('Image converted to base64, sending to filter API');
             fetch('/apply_filter_pgd_blog', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ image: base64data })
             })
-            .then(response => response.json())
+            .then(response => {
+              console.log(`Filter API response status: ${response.status}`);
+              if (!response.ok) throw new Error('Filter API error');
+              return response.json();
+            })
             .then(data => {
               if (data.filtered_image) {
-                img.src = data.filtered_image; // 필터링된 이미지로 업데이트
-                overlay.style.display = 'none'; // 오버레이 숨김
+                console.log('Filter applied successfully');
+                img.src = data.filtered_image;
+                overlay.classList.remove('active'); // 성공 시 오버레이 숨김
 
-                // 필터 적용 상태를 서버에 업데이트
                 fetch(`/mark_filter_applied/${postId}`, {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
@@ -161,20 +178,41 @@ document.addEventListener('DOMContentLoaded', function() {
                   if (!response.ok) throw new Error('Failed to mark filter applied');
                   console.log(`Filter applied and marked for post ${postId}`);
                 })
-                .catch(error => console.error('Error marking filter applied:', error));
+                .catch(error => {
+                  console.error('Error marking filter applied:', error);
+                });
               } else {
                 throw new Error(data.error || 'Filter application failed');
               }
             })
             .catch(error => {
               console.error('Error applying PGD filter:', error);
-              overlay.style.display = 'none';
+              overlay.classList.remove('active'); // 에러 시 오버레이 숨김
             });
           };
           reader.readAsDataURL(blob);
+        })
+        .catch(error => {
+          console.error('Error fetching image:', error);
+          overlay.classList.remove('active'); // 초기 fetch 실패 시 오버레이 숨김
+        })
+        .finally(() => {
+          console.log(`Final overlay state for post ${postId}: ${overlay.classList.contains('active') ? 'visible' : 'hidden'}`);
+          // 강제 숨김 안전장치
+          setTimeout(() => {
+            if (overlay.classList.contains('active')) {
+              console.warn(`Forcing overlay to hide for post ${postId}`);
+              overlay.classList.remove('active');
+            }
+          }, 5000); // 5초 후 강제 숨김
         });
     } else if (applyFilter && filterApplied) {
-      img.src = img.getAttribute('data-filtered'); // 이미 필터링된 이미지 표시
+      console.log(`Filter already applied for post ${postId}`);
+      img.src = img.getAttribute('data-filtered');
+      overlay.classList.remove('active'); // 이미 적용된 경우 오버레이 숨김 보장
+    } else {
+      console.log(`No filter needed for post ${postId}`);
+      overlay.classList.remove('active'); // 필터 필요 없는 경우 오버레이 숨김
     }
   });
 });

@@ -12,3 +12,4 @@ azure-cosmos
 azure-identity
 python-dotenv
 alive-progress
+pytz
