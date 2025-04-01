@@ -27,7 +27,7 @@
 graph TD
     %% 입력 및 적대적 공격
     A[입력 이미지<br>검은 머리 남성] -->|원본| B[스타일 인코더]
-    A -->|적대적 교란<br>PGD 적용| A_adv[적대적 이미지<br>교란된 입력]
+    A -->|적대적 교란| A_adv[적대적 이미지<br>교란된 입력]
     A_adv --> B
     
     %% 스타일 코드 생성
@@ -46,15 +46,9 @@ graph TD
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
 
-    %% 스타일 강조
+    %% 스타일 강조 (수수한 색상 적용)
     classDef attack fill:#e8ecef,stroke:#6c757d,stroke-width:2px;
     class A_adv attack;
-
-    %% PGD 주석
-    subgraph PGD란?
-        Note[PGD: Projected Gradient Descent<br> - 반복적 경사 하강법으로 노이즈 추가<br> - epsilon 범위 내 교란 최적화]
-    end
-    A_adv --> Note
 ```
 - **StarGANv2를 딥페이크에 사용하는 이유** 
 
