@@ -1,9 +1,14 @@
+<<<<<<< HEAD
 name: Deploy to Azure App Service
+=======
+name: Build and Push Docker Image to ACR
+>>>>>>> 6b7e5e8ed14bd2d12b544804662fb1e6afca3ecb
 
 on:
   push:
     branches:
       - main
+<<<<<<< HEAD
 
 env:
   AZURE_WEBAPP_NAME: AIFAKER
@@ -11,12 +16,16 @@ env:
   AZURE_ACR_NAME: aifakerregistry
   AZURE_ACR_LOGIN_SERVER: aifakerregistry.azurecr.io
   IMAGE_NAME: aifaker-app
+=======
+  workflow_dispatch:
+>>>>>>> 6b7e5e8ed14bd2d12b544804662fb1e6afca3ecb
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+<<<<<<< HEAD
       - name: Checkout code
         uses: actions/checkout@v3
 
@@ -44,3 +53,26 @@ jobs:
             --docker-registry-server-password ${{ secrets.AZURE_ACR_PASSWORD }}
 
           az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+=======
+      - uses: actions/checkout@v4
+
+      - name: Log in to Azure
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Log in to ACR
+        run: |
+          az acr login --name aifakerregistry
+
+      - name: Build and push Docker image to ACR
+        run: |
+          docker build -t aifakerregistry.azurecr.io/aifaker-app:latest ./main_dir
+          docker push aifakerregistry.azurecr.io/aifaker-app:latest
+
+      - name: Restart Azure Web App to pull latest image
+        run: |
+          az webapp restart \
+            --name AIFAKER \
+            --resource-group AIFAKER_group
+>>>>>>> 6b7e5e8ed14bd2d12b544804662fb1e6afca3ecb
