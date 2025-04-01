@@ -1,5 +1,5 @@
 # **AIFAKER**
-
+## PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터
 [코드 깃허브](https://github.com/hyundairotemai2/AIFAKER/blob/main/AIFAKER.ipynb)
 
 [웹페이지](https://aifaker-a7c9ehd0bzbxfpcy.koreasouth-01.azurewebsites.net/)
@@ -12,6 +12,39 @@
 > GitHub Actions를 활용한 CI/CD와 Azure 배포까지 전 과정 포함
 
 ---
+# 배경
+![image](https://github.com/user-attachments/assets/453aa3b5-57aa-41bb-a935-d75b765a75df)
+## 딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -> 딥페이크를 방지하는 방법이 없을까?
+
+# 기술
+## 딥페이크
+### StarGANv2 란?
+<li>GAN(생성적 적대 신경망)을 기반으로 한 이미지 변환 모델</li>
+
+![image](https://github.com/user-attachments/assets/53db1040-883c-443b-83d9-4c8554eb601e)
+
+<li>StarGAN v2의 핵심 기능은 다중 도메인 이미지 변환 ex) 사람 얼굴을 "금발 여성 스타일", "고양이 얼굴 스타일" 등으로 바꾸는 작업.</li>
+<li>작동방식</li>
+
+```mermaid
+graph TD
+    A[입력 이미지<br>예: 검은 머리 남성] --> B[스타일 인코더]
+    B --> C[스타일 코드<br>예: 금발 스타일]
+    
+    D[랜덤 노이즈] --> E[매핑 네트워크]
+    E --> F[스타일 코드<br>예: 새로운 금발 스타일]
+    
+    C --> G[생성자]
+    F --> G
+    A --> G
+    
+    G --> H[출력 이미지<br>예: 금발 남성]
+    H --> I[판별자]
+    I --> J[진짜/가짜 판단<br>스타일 일치 여부]
+```
+
+## PGD ( 적대적 노이즈 기법 )  
+
 
 ## 📅 프로젝트 일정
 
