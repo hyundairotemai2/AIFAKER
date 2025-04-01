@@ -6,10 +6,6 @@
 
 [프레젠테이션](https://www.canva.com/design/DAGim4xNjVM/OS5Z3hfUzYSrRb0oreUEyw/edit?utm_content=DAGim4xNjVM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
-# 🔧 프로젝트 스택
-
-> Flask 기반 웹 애플리케이션 + 노이즈 모델 + 프론트엔드 통합 프로젝트  
-> GitHub Actions를 활용한 CI/CD와 Azure 배포까지 전 과정 포함
 
 ---
 # 배경
@@ -24,6 +20,7 @@
 ![image](https://github.com/user-attachments/assets/53db1040-883c-443b-83d9-4c8554eb601e)
 
 <li>StarGAN v2의 핵심 기능은 다중 도메인 이미지 변환 ex) 사람 얼굴을 "금발 여성 스타일", "고양이 얼굴 스타일" 등으로 바꾸는 작업.</li>
+<li>기본 GAN은 단순히 가짜 이미지를 만드는 데 초점이 맞춰져 있다면, StarGAN 시리즈는 이미지 간 변환에 특화</li>
 <li>작동방식</li>
 
 ```mermaid
@@ -42,26 +39,18 @@ graph TD
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
 ```
+<li>StarGANv2를 딥페이크에 사용하는 이유</li>
+ㄴ 얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨 
+
+ㄴ 최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
+
+ㄴ 다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
 
 ## PGD ( 적대적 노이즈 기법 )  
 
 
-## 📅 프로젝트 일정
 
-```mermaid
-gantt
-    title 프로젝트 일정
-    dateFormat 2025-03
-    section 준비
-    기획 :a1, 2025-03-03, 7d
-    설계 :after a1, 2025-03-10, 4d
-    section 개발
-    기능 개발 :2025-03-12, 10d
-    테스트 :2025-03-22, 4d
-```
-
-##  노이즈 단계별 이미지 검증 결과
-![노이즈 단계별 이미지 검증 결과](https://github.com/user-attachments/assets/a07be288-b4ea-4dea-a116-3b32af515e61)
+## 검증 - StarGANv2를 이용한 딥페이크
 
 ## 웹 - SNS 서비스 플로우
 ![image](https://github.com/user-attachments/assets/a9b5ad76-9c19-4c83-b06e-29150a9ce59e)
@@ -121,6 +110,13 @@ flowchart LR
     classDef node_style fill:#FFFFFF,stroke:#333333,stroke-width:1px;
     class app_start,upload_image,noise_model,modified_result,original_result node_style;
 ```
+
+# 🔧 프로젝트 스택
+
+> Flask 기반 웹 애플리케이션 + 노이즈 모델 + 프론트엔드 통합 프로젝트  
+> GitHub Actions를 활용한 CI/CD와 Azure 배포까지 전 과정 포함
+
+
 ## 🗂️ CI/CD 파이프라인
 
 ```mermaid
@@ -226,7 +222,19 @@ erDiagram
     BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
     CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
+## 📅 프로젝트 일정
 
+```mermaid
+gantt
+    title 프로젝트 일정
+    dateFormat 2025-03
+    section 준비
+    기획 :a1, 2025-03-03, 7d
+    설계 :after a1, 2025-03-10, 4d
+    section 개발
+    기능 개발 :2025-03-12, 10d
+    테스트 :2025-03-22, 4d
+```
 
 
 
