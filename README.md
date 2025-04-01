@@ -25,13 +25,15 @@
 
 ```mermaid
 graph TD
-    %% 입력 및 적대적 공격
-    A[입력 이미지<br>검은 머리 남성] -->|원본| B[스타일 인코더]
-    A -->|적대적 교란| A_adv[적대적 이미지<br>교란된 입력]
-    A_adv --> B
+    %% 입력 및 적대적 공격과 스타일 관련 노드를 하나의 서브그래프로 묶음
+    subgraph 적대적_공격_및_스타일
+        A[입력 이미지<br>검은 머리 남성] -->|원본| B[스타일 인코더]
+        A -->|적대적 교란| A_adv[적대적 이미지<br>교란된 입력]
+        A_adv --> B
+        B --> C[스타일 코드<br>금발 스타일]
+    end
     
-    %% 스타일 코드 생성
-    B --> C[스타일 코드<br>금발 스타일]
+    %% 나머지 플로우
     D[랜덤 노이즈] --> E[매핑 네트워크]
     E --> F[스타일 코드<br>새로운 금발 스타일]
     
@@ -46,9 +48,9 @@ graph TD
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
 
-    %% 스타일 강조 (수수한 색상 적용)
-    classDef attack fill:#e8ecef,stroke:#6c757d,stroke-width:2px;
-    class A_adv attack;
+    %% 스타일 강조 (빨간색 적용)
+    classDef attack fill:#ffcccc,stroke:#ff0000,stroke-width:2px;
+    class A_adv,B,C attack;
 ```
 - **StarGANv2를 딥페이크에 사용하는 이유** 
 
