@@ -27,6 +27,14 @@ gantt
     테스트 :2025-03-22, 4d
 ```
 
+## 웹 - SNS 서비스 플로우
+![image](https://github.com/user-attachments/assets/a9b5ad76-9c19-4c83-b06e-29150a9ce59e)
+
+
+## 웹 - 블로그 서비스 플로우
+![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
+
+
 ## 🗂️ CI/CD 파이프라인인
 
 ```mermaid
@@ -136,10 +144,5 @@ erDiagram
 ##  노이즈 단계별 이미지 검증 결과
 ![노이즈 단계별 이미지 검증 결과](https://github.com/user-attachments/assets/a07be288-b4ea-4dea-a116-3b32af515e61)
 
-## 웹 - SNS 서비스 플로우
-![image](https://github.com/user-attachments/assets/a9b5ad76-9c19-4c83-b06e-29150a9ce59e)
 
-
-## 웹 - 블로그 서비스 플로우
-![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
 
