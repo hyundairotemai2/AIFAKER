@@ -38,7 +38,7 @@ flowchart LR
     GitHub["🌐 GitHub<br/>(Remote Repository)"]
     Actions["🔄 GitHub Actions<br/>(CI/CD Tool)"]
     Azure["☁️ Azure<br/>(Webserver)"]
-    Customer["🙋 사용자<br/>(Customer)"]
+    Customer["🙋 고객<br/>(Customer)"]
 
     %% ✅ AI Server 그룹
     subgraph "🧠 AI Server"
@@ -53,6 +53,7 @@ flowchart LR
         Actions --> Azure
     end
 
+    %% ✅ 데이터 흐름: 사용자로 "결과" 전달
     Azure --> Customer
 
     %% ✅ 클래스 정의 (노드 색상)
