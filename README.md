@@ -31,41 +31,44 @@ gantt
 
 ```mermaid
 flowchart LR
-    Model["🧪 노이즈 모델<br/>(Noise_model)"]
-    Frontend["🎨 프론트엔드<br/>(Front_end)"]
-    Backend["⚙️ Flask 앱<br/>(Webapplication)"]
-
-    GitHub["🌐 GitHub<br/>(Remote Repository)"]
-    Actions["🔄 GitHub Actions<br/>(CI/CD Tool)"]
-    Azure["☁️ Azure<br/>(Webserver)"]
-    Customer["🙋 고객<br/>(Customer)"]
-
-    %% ✅ AI Server 그룹
-    subgraph "🧠 AI Server"
-        Model --> GitHub
-        Frontend --> GitHub
-        Backend --> GitHub
+    %% 👨‍💻 개발자
+    subgraph Developer ["👨‍💻 개발자"]
+        dev(["💾 코드 푸시"])
     end
 
-    %% ✅ Web Server 그룹
-    subgraph "💻 Web Server"
-        GitHub --> Actions
-        Actions --> Azure
+    %% 🛠️ GitHub Actions CI/CD
+    subgraph GitHub_CI_CD ["🛠️ GitHub Actions (CI/CD)"]
+        repo["📁 GitHub<br/>리포지토리"]
+        workflow["⚙️ 빌드/테스트<br/>+ 배포 작업"]
+        repo --> workflow
     end
 
-    %% ✅ 데이터 흐름: 사용자로 "결과" 전달
-    Azure --> Customer
+    %% ☁️ Azure 클라우드
+    subgraph Azure_Cloud ["☁️ Azure 클라우드"]
+        subgraph App_Service ["🚀 Azure App Service (Linux)"]
+            app["🌐 Flask 웹 앱"]
+        end
+        db["🗄️ Cosmos DB"]
+        kv["🔐 Key Vault"]
+    end
 
-    %% ✅ 클래스 정의 (노드 색상)
-    classDef dev fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
-    classDef code fill:#fffbe6,stroke:#faad14,stroke-width:2px;
-    classDef infra fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
-    classDef deploy fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
+    %% 🙋 사용자
+    user(["🙋 사용자<br/>클라이언트"]) -->|"🌐 HTTP 요청"| app
+    app -->|📡 "데이터 요청/응답"| db
+    app -->|🔑 "시크릿 참조"| kv
+    dev -->|🔁 "커밋/푸시"| repo
+    workflow -->|🔐 "OIDC 인증 & 배포"| app
 
-    %% ✅ 클래스 적용
-    class Model,Frontend,Backend code;
-    class GitHub,Actions infra;
-    class Azure,Customer deploy;
+    %% 🎨 스타일링
+    classDef developer fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
+    classDef github fill:#fffbe6,stroke:#faad14,stroke-width:2px;
+    classDef azure fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
+    classDef user fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
+
+    class dev developer;
+    class repo,workflow github;
+    class app,db,kv azure;
+    class user user;
 ```
 
 ##  데이터베이스 아키텍처
