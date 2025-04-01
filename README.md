@@ -53,7 +53,7 @@ flowchart LR
         app_start --> upload_image
     end
 
-    %% PGD 공격 여부 선택
+    %% PGD 필터링 여부 선택
     subgraph Choice ["🔄 PGD 공격 여부"]
         upload_image -->|✅ PGD 적용| Confirm_Path
         upload_image -->|❌ 원본 유지| Cancel_Path
