@@ -19,15 +19,13 @@
 
 ![image](https://github.com/user-attachments/assets/53db1040-883c-443b-83d9-4c8554eb601e)
 
-<li>StarGAN v2의 핵심 기능은 다중 도메인 이미지 변환 ex) 사람 얼굴을 "금발 여성 스타일", "고양이 얼굴 스타일" 등으로 바꾸는 작업.</li>
-<li>기본 GAN은 단순히 가짜 이미지를 만드는 데 초점이 맞춰져 있다면, StarGAN 시리즈는 이미지 간 변환에 특화</li>
-<li>작동방식</li>
+- StarGAN v2의 핵심 기능은 다중 도메인 이미지 변환 ex) 사람 얼굴을 "금발 여성 스타일", "고양이 얼굴 스타일" 등으로 바꾸는 작업.
+- 기본 GAN은 단순히 가짜 이미지를 만드는 데 초점이 맞춰져 있다면, StarGAN 시리즈는 이미지 간 변환에 특화
+- 작동방식
 
 ```mermaid
 graph TD
-    A[입력 이미지<br>예: 검은 머리 남성] -->|적대적 교란| A_adv[적대적 이미지<br>예: 교란된 검은 머리 남성]
-    A --> B[스타일 인코더]
-    A_adv --> B
+    A[입력 이미지<br>예: 검은 머리 남성] --> B[스타일 인코더]
     B --> C[스타일 코드<br>예: 금발 스타일]
     
     D[랜덤 노이즈] --> E[매핑 네트워크]
@@ -36,22 +34,40 @@ graph TD
     C --> G[생성자]
     F --> G
     A --> G
-    A_adv --> G
     
     G --> H[출력 이미지<br>예: 금발 남성]
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
 ```
-<li>StarGANv2를 딥페이크에 사용하는 이유</li>
-ㄴ 얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨 
+- **StarGANv2를 딥페이크에 사용하는 이유** 
 
-ㄴ 최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
-
-ㄴ 다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
+ㄴ 얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨   
+                          ㄴ 최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
+         ㄴ 다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
 
 ## PGD ( 적대적 노이즈 기법 )  
 
 
+
+# 결과
+
+## 필터 적용 Before vs After
+
+## Before vs After
+
+<div style="display: flex; justify-content: space-around;">
+  <div style="text-align: center;">
+    <p><strong>Before</strong></p>
+    <img src="https://github.com/user-attachments/assets/a6efe100-85c4-4b50-927e-0a377a42f2be" width="45%" alt="Before">
+  </div>
+  <div style="text-align: center;">
+    <p><strong>After</strong></p>
+    <img src="https://github.com/user-attachments/assets/dc603cf1-46f9-4842-a3aa-98a7df9e96dd" width="45%" alt="After">
+  </div>
+</div>
+
+- **Before**: 적대적 노이즈 적용 전
+- **After**: 적대적 노이즈 적용 후 결과
 
 ## 검증 - StarGANv2를 이용한 딥페이크
 
