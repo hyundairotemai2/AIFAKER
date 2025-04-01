@@ -35,7 +35,96 @@ gantt
 ![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
 
 
-## 🗂️ CI/CD 파이프라인인
+## SNS 아키텍쳐
+```mermaid
+flowchart LR
+    %% 앱 - 메시저 앱
+    subgraph App ["📱 앱 - 메시저 앱"]
+        login["🔐 로그인<br/>ID/Password 입력"]
+        message["💬 메시지 앱<br/>대화창"]
+        login --> message
+    end
+
+    %% 이미지 파일 선택
+    subgraph Image_Selection ["🖼️ 이미지 파일 선택"]
+        select_image["📸 이미지 선택<br/>사진 업로드"]
+        message --> select_image
+    end
+
+    %% PGD 공격
+    subgraph PGD_Attack ["⚔️ PGD 공격"]
+        noise_model["🧪 PGD 노이즈 모델<br/>이미지 공격 수행"]
+        select_image --> noise_model
+    end
+
+    %% 변경된 이미지 전송
+    subgraph Modified_Image ["📤 변경된 이미지 전송"]
+        modified_message["💬 변경된 이미지<br/>대화창에 전송"]
+        noise_model --> modified_message
+        modified_message --> message
+    end
+
+    %% 스타일
+    classDef app fill:#fffbe6,stroke:#faad14,stroke-width:2px;
+    classDef image fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
+    classDef attack fill:#f6ffed,stroke:#52c41a,stroke-width:2px;
+    classDef modified fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
+
+    class login,message app;
+    class select_image image;
+    class noise_model attack;
+    class modified_message modified;
+```
+## Blog 아키텍쳐
+``` mermaid
+flowchart LR
+    %% 앱 - 블로그 앱
+    subgraph App ["📱 앱 - 블로그 앱"]
+        blog["📝 My Blog<br/>글 목록"]
+        write_button["✏️ 글쓰기 버튼"]
+        blog --> write_button
+    end
+
+    %% 글쓰기
+    subgraph Writing ["📄 글쓰기"]
+        write_post["🖼️ 이미지 업로드<br/>글 작성"]
+        write_button --> write_post
+    end
+
+    %% 확인/취소 선택
+    subgraph Choice ["🔄 확인/취소 선택"]
+        confirm["✅ 확인 버튼"]
+        cancel["❌ 취소 버튼"]
+        write_post --> confirm
+        write_post --> cancel
+    end
+
+    %% 확인 버튼: PGD 공격 및 변경된 이미지 업로드
+    subgraph Confirm_Path ["✅ 확인: PGD 공격"]
+        noise_model["🧪 PGD 노이즈 모델<br/>이미지 공격 수행"]
+        modified_post["📜 변경된 이미지 포함<br/>글 업로드"]
+        confirm --> noise_model --> modified_post
+    end
+
+    %% 취소 버튼: 원본 이미지 업로드
+    subgraph Cancel_Path ["❌ 취소: 원본 업로드"]
+        original_post["📜 원본 이미지 포함<br/>글 업로드"]
+        cancel --> original_post
+    end
+
+    %% 서브그래프 스타일
+    style App fill:#F5F6F5,stroke:#03C75A,stroke-width:2px; 
+    style Writing fill:#FFFFFF,stroke:#03C75A,stroke-width:2px;
+    style Choice fill:#E8ECEF,stroke:#333333,stroke-width:1px; 
+    style Confirm_Path fill:#E6F5EC,stroke:#03C75A,stroke-width:2px; 
+    style Cancel_Path fill:#F5F6F5,stroke:#FF4D4F,stroke-width:2px; 
+
+    %% 노드 스타일
+    classDef node_style fill:#FFFFFF,stroke:#333333,stroke-width:1px;
+    class blog,write_button,write_post,confirm,cancel,noise_model,modified_post,original_post node_style;
+```
+
+## 🗂️ CI/CD 파이프라인
 
 ```mermaid
 flowchart LR
