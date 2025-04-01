@@ -120,8 +120,9 @@ graph TD
 
 ## 검증 - StarGANv2를 이용한 딥페이크
 
-## 웹 - SNS 서비스 플로우
 ![1EMVf](https://github.com/user-attachments/assets/fe579094-6dad-42ae-80c2-29febb029a9c)
+
+## 웹 - SNS 서비스 플로우
 
 ![image](https://github.com/user-attachments/assets/a9b5ad76-9c19-4c83-b06e-29150a9ce59e)
 
