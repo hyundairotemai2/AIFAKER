@@ -1,4 +1,4 @@
-![image](https://github.com/user-attachments/assets/f5a0bf0c-1e58-400b-b83b-99de0375feb5)# **AIFAKER**
+# **AIFAKER**
 
 [코드 깃허브](https://github.com/hyundairotemai2/AIFAKER/blob/main/AIFAKER.ipynb)
 
@@ -126,67 +126,51 @@ flowchart LR
 ## 통합 아키텍쳐
 ```mermaid
 flowchart LR
-    %% 앱 진입
-    subgraph App_Entry ["📱 앱 진입"]
-        subgraph SNS ["📱 SNS 앱"]
-            sns_login["🔐 로그인<br/>ID/Password 입력"]
-            sns_message["💬 메시지 앱<br/>대화창"]
-            sns_login --> sns_message
-        end
-        subgraph Blog ["📝 Blog 앱"]
-            blog["📝 My Blog<br/>글 목록"]
-            write_button["✏️ 글쓰기 버튼"]
-            blog --> write_button
-        end
+    %% 앱 진입 (SNS/Blog 통합)
+    subgraph App_Entry ["📱 앱 진입 (SNS/Blog)"]
+        app_start["📱 앱 시작<br/>(SNS: 메시지 앱, Blog: 글 목록)"]
     end
 
     %% 이미지 업로드
     subgraph Image_Upload ["🖼️ 이미지 업로드"]
-        upload_image["📸 이미지 업로드<br/>(SNS: 사진 선택, Blog: 글 작성)"]
-        sns_message --> upload_image
-        write_button --> upload_image
+        upload_image["📸 이미지 업로드"]
+        app_start --> upload_image
     end
 
     %% PGD 공격 여부 선택
-    subgraph Choice ["🔄 PGD 공격 여부 선택"]
-        confirm["✅ 확인: PGD 공격 적용"]
-        cancel["❌ 취소: 원본 이미지 사용"]
-        upload_image --> confirm
-        upload_image --> cancel
+    subgraph Choice ["🔄 PGD 공격 여부"]
+        upload_image -->|✅ PGD 적용| Confirm_Path
+        upload_image -->|❌ 원본 유지| Cancel_Path
     end
 
-    %% 확인 경로: PGD 공격 및 결과 전송/업로드
-    subgraph Confirm_Path ["✅ 확인: PGD 공격"]
-        noise_model["🧪 PGD 노이즈 모델<br/>이미지 공격 수행"]
-        modified_result["📤 결과<br/>(SNS: 대화창 전송, Blog: 글 업로드)"]
+    %% 확인 경로: PGD 공격
+    subgraph Confirm_Path ["✅ PGD 공격"]
+        noise_model["🧪 PGD 공격"]
+        modified_result["📤 결과<br/>(SNS: 전송, Blog: 업로드)"]
         noise_model --> modified_result
-        confirm --> noise_model
     end
 
-    %% 취소 경로: 원본 이미지 전송/업로드
-    subgraph Cancel_Path ["❌ 취소: 원본 이미지"]
-        original_result["📤 결과<br/>(SNS: 대화창 전송, Blog: 글 업로드)"]
-        cancel --> original_result
+    %% 취소 경로: 원본 이미지
+    subgraph Cancel_Path ["❌ 원본 이미지"]
+        original_result["📤 결과<br/>(SNS: 전송, Blog: 업로드)"]
     end
 
     %% 결과 반영
-    modified_result --> sns_message
-    modified_result --> blog
-    original_result --> sns_message
-    original_result --> blog
+    modified_result --> app_start
+    original_result --> app_start
 
-    %% 서브그래프 스타일 (네이버 블로그 테마 반영)
-    style App_Entry fill:#F5F6F5,stroke:#03C75A,stroke-width:2px; %% Naver Blog background and green border
-    style SNS fill:#F5F6F5,stroke:#03C75A,stroke-width:1px;
-    style Blog fill:#F5F6F5,stroke:#03C75A,stroke-width:1px;
-    style Image_Upload fill:#FFFFFF,stroke:#03C75A,stroke-width:2px; %% White background for upload section
+    user(["🙋 사용자"]) -->|🌐 사용| app_start
+    
+    %% 서브그래프 스타일 (네이버 블로그 테마 간소화)
+    style App_Entry fill:#F5F6F5,stroke:#03C75A,stroke-width:1px; %% Naver Blog background and green border
+    style Image_Upload fill:#FFFFFF,stroke:#03C75A,stroke-width:1px; %% White background for upload section
     style Choice fill:#E8ECEF,stroke:#333333,stroke-width:1px; %% Light gray for choice section
-    style Confirm_Path fill:#E6F5EC,stroke:#03C75A,stroke-width:2px; %% Light green for confirm path
-    style Cancel_Path fill:#F5F6F5,stroke:#FF4D4F,stroke-width:2px; %% Default background with red border for cancel path
+    style Confirm_Path fill:#E6F5EC,stroke:#03C75A,stroke-width:1px; %% Light green for confirm path
+    style Cancel_Path fill:#F5F6F5,stroke:#FF4D4F,stroke-width:1px; %% Default background with red border for cancel path
 
-    %% 노드 스타일
+    %% 노드 스타일 (간소화)
     classDef node_style fill:#FFFFFF,stroke:#333333,stroke-width:1px;
-    class sns_login,sns_message,blog,write_button,upload_image,confirm,cancel,noise_model,modified_result,original_result node_style;
+    class app_start,upload_image,noise_model,modified_result,original_result node_style;
 ```
 ## 🗂️ CI/CD 파이프라인
 
