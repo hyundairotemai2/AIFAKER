@@ -25,19 +25,36 @@
 
 ```mermaid
 graph TD
-    A[입력 이미지<br>예: 검은 머리 남성] --> B[스타일 인코더]
-    B --> C[스타일 코드<br>예: 금발 스타일]
+    %% 입력 및 적대적 공격
+    A[입력 이미지<br>검은 머리 남성] -->|원본| B[스타일 인코더]
+    A -->|적대적 교란<br>PGD 적용| A_adv[적대적 이미지<br>교란된 입력]
+    A_adv --> B
     
+    %% 스타일 코드 생성
+    B --> C[스타일 코드<br>금발 스타일]
     D[랜덤 노이즈] --> E[매핑 네트워크]
-    E --> F[스타일 코드<br>예: 새로운 금발 스타일]
+    E --> F[스타일 코드<br>새로운 금발 스타일]
     
-    C --> G[생성자]
+    %% 이미지 생성
+    A --> G[생성자]
+    A_adv --> G
+    C --> G
     F --> G
-    A --> G
     
-    G --> H[출력 이미지<br>예: 금발 남성]
+    %% 판별 과정
+    G --> H[출력 이미지<br>금발 남성]
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
+
+    %% 스타일 강조
+    classDef attack fill:#e8ecef,stroke:#6c757d,stroke-width:2px;
+    class A_adv attack;
+
+    %% PGD 주석
+    subgraph PGD란?
+        Note[PGD: Projected Gradient Descent<br> - 반복적 경사 하강법으로 노이즈 추가<br> - epsilon 범위 내 교란 최적화]
+    end
+    A_adv --> Note
 ```
 - **StarGANv2를 딥페이크에 사용하는 이유** 
 
