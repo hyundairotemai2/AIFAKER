@@ -31,10 +31,6 @@ gantt
 
 ```mermaid
 flowchart LR
-    Engineer["👨‍💻 개발자<br/>(Engineer)"]
-    IDE["🧱 VSCode<br/>(IDE)"]
-    Codebase["📂 코드베이스<br/>(Project Structure)"]
-
     Model["🧪 노이즈 모델<br/>(Noise_model)"]
     Frontend["🎨 프론트엔드<br/>(Front_end)"]
     Backend["⚙️ Flask 앱<br/>(Webapplication)"]
@@ -44,18 +40,19 @@ flowchart LR
     Azure["☁️ Azure<br/>(Webserver)"]
     Customer["🙋 사용자<br/>(Customer)"]
 
-    Engineer --> IDE
-    IDE --> Codebase
-    Codebase --> Model
-    Codebase --> Frontend
-    Codebase --> Backend
+    %% ✅ AI Server 그룹
+    subgraph "🧠 AI Server"
+        Model --> GitHub
+        Frontend --> GitHub
+        Backend --> GitHub
+    end
 
-    Model --> GitHub
-    Frontend --> GitHub
-    Backend --> GitHub
+    %% ✅ Web Server 그룹
+    subgraph "💻 Web Server"
+        GitHub --> Actions
+        Actions --> Azure
+    end
 
-    GitHub --> Actions
-    Actions --> Azure
     Azure --> Customer
 
     %% ✅ 클래스 정의 (노드 색상)
@@ -65,11 +62,9 @@ flowchart LR
     classDef deploy fill:#fff0f6,stroke:#eb2f96,stroke-width:2px;
 
     %% ✅ 클래스 적용
-    class Engineer,IDE dev;
-    class Codebase,Model,Frontend,Backend code;
+    class Model,Frontend,Backend code;
     class GitHub,Actions infra;
     class Azure,Customer deploy;
-
 ```
 
 ##  데이터베이스 아키텍처
