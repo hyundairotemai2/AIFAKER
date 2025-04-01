@@ -1,4 +1,4 @@
-name: Deploy to Azure App Service
+name: Deploy to Azure Web App
 
 on:
   push:
@@ -8,39 +8,39 @@ on:
 env:
   AZURE_WEBAPP_NAME: AIFAKER
   AZURE_RESOURCE_GROUP: AIFAKER_group
-  AZURE_ACR_NAME: aifakerregistry
-  AZURE_ACR_LOGIN_SERVER: aifakerregistry.azurecr.io
   IMAGE_NAME: aifaker-app
 
 jobs:
-  build-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Log in to Azure Container Registry
-        run: |
-          echo "${{ secrets.AZURE_ACR_PASSWORD }}" | docker login ${{ env.AZURE_ACR_LOGIN_SERVER }} \
-            --username ${{ secrets.AZURE_ACR_USERNAME }} --password-stdin
+      - name: Log in to Azure
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
 
-      - name: Build and push Docker image
+      - name: Build and Push Docker image to ACR
         run: |
-          docker build -t ${{ env.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest ./main_dir
-          docker push ${{ env.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
+          az acr login --name ${{ secrets.AZURE_ACR_LOGIN_SERVER }}
+          docker build -t ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest ./main_dir
+          docker push ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
 
       - name: Deploy to Azure Web App
         run: |
-          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} \
-            -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
-
           az webapp config container set \
             --name ${{ env.AZURE_WEBAPP_NAME }} \
             --resource-group ${{ env.AZURE_RESOURCE_GROUP }} \
-            --docker-custom-image-name ${{ env.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
-            --docker-registry-server-url https://${{ env.AZURE_ACR_LOGIN_SERVER }} \
+            --docker-custom-image-name ${{ secrets.AZURE_ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest \
+            --docker-registry-server-url https://${{ secrets.AZURE_ACR_LOGIN_SERVER }} \
             --docker-registry-server-user ${{ secrets.AZURE_ACR_USERNAME }} \
             --docker-registry-server-password ${{ secrets.AZURE_ACR_PASSWORD }}
 
-          az webapp restart --name ${{ env.AZURE_WEBAPP_NAME }} --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
+      - name: Restart Web App
+        run: |
+          az webapp restart \
+            --name ${{ env.AZURE_WEBAPP_NAME }} \
+            --resource-group ${{ env.AZURE_RESOURCE_GROUP }}
