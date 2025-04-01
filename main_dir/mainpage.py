@@ -10,13 +10,14 @@ from PIL import Image
 import torchvision.transforms as transforms
 from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
 from azure.cosmos import CosmosClient
-from azure.core import exceptions
 from dotenv import load_dotenv
 import sys
-import pytz  # 시간대 처리를 위해 추가
 
 # PGD_noise 모듈 임포트
 from PGD_noise import PGDModelDummyGenerator, PGDModelDummyStyleEncoder, PGDModelDummyLPIPS, pgdmodel_attack_on_image
+
+# CheckpointIO 모듈 임포트 (추가)
+from checkpoint_io import CheckpointIO
 
 # .env 파일 로드
 load_dotenv()
@@ -48,10 +49,8 @@ cosmos_client = CosmosClient(COSMOS_ENDPOINT, COSMOS_KEY)
 def create_container_if_not_exists(container_client):
     try:
         container_client.get_container_properties()
-    except exceptions.ResourceNotFoundError:
+    except Exception:
         container_client.create_container()
-    except exceptions.ResourceExistsError:
-        pass
 
 create_container_if_not_exists(blob_container_client)
 create_container_if_not_exists(blob_chat_images_client)
@@ -71,8 +70,18 @@ sys.stdout.reconfigure(encoding='utf-8')
 app = Flask(__name__)
 app.secret_key = "supersecretkey"
 
-# PGD 모델 전역 초기화
+# PGD 모델 및 CheckpointIO 전역 초기화 (수정)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+# CheckpointIO 인스턴스 생성
+CHECKPOINT_DIR = "./checkpoints"
+checkpoint_io = CheckpointIO(
+    checkpoint_dir=CHECKPOINT_DIR,
+    checkpoint_prefix="pgd_checkpoint_{:06d}.pt",
+    data_parallel=False
+)
+
+# PGD 모델 초기화
 PGD_NETS = {
     "generator": PGDModelDummyGenerator().to(device),
     "style_encoder": PGDModelDummyStyleEncoder(out_dim=64).to(device),
@@ -80,15 +89,35 @@ PGD_NETS = {
 PGD_LPIPS_MODEL = PGDModelDummyLPIPS()
 PGD_Y_REF = torch.zeros(1, 3, 256, 256).to(device)
 
-# 한국 시간대 설정
-KST = pytz.timezone('Asia/Seoul')
+# 모델을 CheckpointIO에 등록
+checkpoint_io.register_modules(**PGD_NETS)
+
+# 체크포인트 로드 함수
+def load_latest_checkpoint():
+    latest_step = checkpoint_io.get_latest_checkpoint()
+    if latest_step is not None:
+        print(f"Loading latest checkpoint from step {latest_step}")
+        checkpoint_io.load(latest_step)
+    else:
+        print("No checkpoint found, starting with fresh models")
+
+# 체크포인트 저장 함수
+def save_checkpoint(step):
+    checkpoint_io.save(step)
+    print(f"Checkpoint saved at step {step}")
+
+# 앱 시작 시 최신 체크포인트 로드
+load_latest_checkpoint()
+
+# 체크포인트 스텝 카운터 (전역 변수로 관리)
+step_counter = 0
 
 # 유틸리티 함수
 def generate_unique_id():
     return str(uuid.uuid4())
 
 def current_time():
-    now = datetime.now(KST)  # KST로 현재 시간 가져오기
+    now = datetime.now()
     hh = now.hour
     mm = now.minute
     apm = "오후" if hh >= 12 else "오전"
@@ -118,7 +147,7 @@ def upload_to_blob(file_data, filename, container_client=None, user_id=None, pos
     
     return f"{blob_client.url}?{sas_token}"
 
-# 이미지 처리 함수 (SGN 노이즈)
+# 이미지 처리 함수 (기존 SGN 노이즈)
 def generate_sgn_noise(image_tensor, strength=0.03):
     noise_layers = []
     for scale in [4, 8, 16, 32, 64]:
@@ -145,27 +174,23 @@ def protect_image(image_data):
 # PGD 기반 이미지 처리 함수
 def protect_image_pgd(image_data):
     temp_filename = f"temp_{generate_unique_id()}.png"
-    try:
-        with open(temp_filename, "wb") as f:
-            f.write(image_data)
-        
-        result_img = pgdmodel_attack_on_image(
-            image_path=temp_filename,
-            nets=PGD_NETS,
-            lpips_model=PGD_LPIPS_MODEL,
-            y_ref=PGD_Y_REF,
-            epsilon=0.05,
-            alpha=0.01,
-            num_iter=5,
-        )
-        
-        buffered = io.BytesIO()
-        result_img.save(buffered, format="PNG")
-        os.remove(temp_filename)
-        return buffered.getvalue()
-    except Exception as e:
-        print(f"Error in protect_image_pgd: {str(e)}")
-        raise
+    with open(temp_filename, "wb") as f:
+        f.write(image_data)
+    
+    result_img = pgdmodel_attack_on_image(
+        image_path=temp_filename,
+        nets=PGD_NETS,
+        lpips_model=PGD_LPIPS_MODEL,
+        y_ref=PGD_Y_REF,
+        epsilon=0.05,
+        alpha=0.01,
+        num_iter=5,
+    )
+    
+    buffered = io.BytesIO()
+    result_img.save(buffered, format="PNG")
+    os.remove(temp_filename)
+    return buffered.getvalue()
 
 # 블로그 관련 함수
 def get_posts():
@@ -173,7 +198,7 @@ def get_posts():
     return list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
 
 def save_post(post_data):
-    post_data['date'] = datetime.now(KST).isoformat()  # KST로 저장
+    post_data['created_at'] = datetime.now().isoformat()
     cosmos_container.create_item(body=post_data)
 
 # 채팅 관련 함수
@@ -182,7 +207,7 @@ def get_chat_messages():
     return list(cosmos_messages_container.query_items(query=query, enable_cross_partition_query=True))
 
 def save_chat_message(message_data):
-    message_data['timestamp'] = datetime.now(KST).isoformat()  # KST로 저장
+    message_data['timestamp'] = datetime.now().isoformat()
     cosmos_messages_container.create_item(body=message_data)
 
 def load_users():
@@ -196,7 +221,7 @@ def save_user(username, password):
         'id': user_id,
         'username': username,
         'password': password,
-        'created_at': datetime.now(KST).isoformat(),  # KST로 저장
+        'created_at': datetime.now().isoformat(),
         'role': 'user'
     }
     cosmos_users_container.create_item(body=user_data)
@@ -213,17 +238,14 @@ def blog():
     for post in posts:
         if 'date' in post:
             try:
-                # 저장된 KST 시간을 그대로 포맷팅
-                kst_date = datetime.fromisoformat(post['date'])
-                post['date'] = kst_date.strftime('%Y-%m-%d %H:%M')
-            except (ValueError, TypeError) as e:
-                print(f"Error parsing date: {e}")
+                post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+            except (ValueError, TypeError):
                 post['date'] = '날짜 없음'
         else:
             post['date'] = '날짜 없음'
         
         post['apply_filter'] = post.get('apply_filter', False)
-        post['filter_applied'] = post.get('filter_applied', False)
+        post['filter_applied'] = post.get('filter_applied', True)
         
         if post['apply_filter'] and post['filter_applied']:
             post['image_url'] = post.get('filtered_image_url') or post.get('image_url')
@@ -238,16 +260,11 @@ def blog():
 
 @app.route('/mark_filter_applied/<string:post_id>', methods=['POST'])
 def mark_filter_applied(post_id):
-    data = request.get_json() or {}
-    filtered_image_url = data.get('filtered_image_url')
-    
     query = f"SELECT * FROM c WHERE c.id = '{post_id}'"
     posts = list(cosmos_container.query_items(query=query, enable_cross_partition_query=True))
     if posts:
         post = posts[0]
         post['filter_applied'] = True
-        if filtered_image_url:
-            post['filtered_image_url'] = filtered_image_url
         post['image_url'] = post.get('filtered_image_url') or post.get('image_url')
         cosmos_container.replace_item(item=post, body=post)
         return jsonify({'success': True})
@@ -261,17 +278,14 @@ def post(post_id):
         post = posts[0]
         if 'date' in post:
             try:
-                # KST 시간으로 저장된 값을 포맷팅
-                kst_date = datetime.fromisoformat(post['date'])
-                post['date'] = kst_date.strftime('%Y-%m-%d %H:%M')
-            except (ValueError, TypeError) as e:
-                print(f"Error parsing date: {e}")
+                post['date'] = datetime.fromisoformat(post['date']).strftime('%Y-%m-%d %H:%M')
+            except (ValueError, TypeError):
                 post['date'] = '날짜 없음'
         else:
             post['date'] = '날짜 없음'
         
         post['apply_filter'] = post.get('apply_filter', False)
-        post['filter_applied'] = post.get('filter_applied', False)
+        post['filter_applied'] = post.get('filter_applied', True)
         
         if post['apply_filter'] and post['filter_applied']:
             post['display_image_url'] = post.get('filtered_image_url') or post.get('image_url')
@@ -285,10 +299,8 @@ def post(post_id):
         for comment in comments:
             if 'date' in comment:
                 try:
-                    kst_date = datetime.fromisoformat(comment['date'])
-                    comment['date_str'] = kst_date.strftime('%Y-%m-%d %H:%M')
-                except (ValueError, TypeError) as e:
-                    print(f"Error parsing comment date: {e}")
+                    comment['date_str'] = datetime.fromisoformat(comment['date']).strftime('%Y-%m-%d %H:%M')
+                except (ValueError, TypeError):
                     comment['date_str'] = '날짜 없음'
             else:
                 comment['date_str'] = '날짜 없음'
@@ -302,6 +314,7 @@ def write():
 
 @app.route('/create_post', methods=['POST'])
 def create_post():
+    global step_counter
     title = request.form["title"]
     content = request.form["content"]
     image = request.files.get("image")
@@ -319,13 +332,14 @@ def create_post():
         filename = secure_filename(image.filename)
         image_data = image.read()
         original_image_url = upload_to_blob(image_data, filename, user_id=anonymous_id, post_id=post_id)
-        image_url = original_image_url
 
         if apply_filter:
             filtered_image_data = protect_image_pgd(image_data)
             filtered_filename = f"pgd_filtered_{filename}"
             filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
             image_url = filtered_image_url
+        else:
+            image_url = original_image_url
 
     post_data = {
         'id': post_id,
@@ -335,14 +349,20 @@ def create_post():
         'content': content,
         'image_url': image_url,
         'original_image_url': original_image_url if image else None,
-        'filtered_image_url': filtered_image_url if apply_filter and image else None,
+        'filtered_image_url': filtered_image_url if apply_filter else None,
         'apply_filter': apply_filter,
-        'filter_applied': apply_filter,
-        'date': datetime.now(KST).isoformat(),  # KST로 저장
+        'filter_applied': False if apply_filter else True,
+        'date': datetime.now().isoformat(),
         'password': password
     }
 
     save_post(post_data)
+    
+    # 게시물 생성 후 체크포인트 저장 (1000번마다 저장 예시)
+    step_counter += 1
+    if step_counter % 1000 == 0:
+        save_checkpoint(step_counter)
+    
     return redirect(url_for("blog"))
 
 @app.route('/delete/<string:post_id>', methods=['POST'])
@@ -354,30 +374,6 @@ def delete_post(post_id):
     if posts:
         post = posts[0]
         if post.get('password') == password:
-            try:
-                if post.get('image_url'):
-                    blob_name = post['image_url'].split('?')[0].split('/')[-1]
-                    if post.get('user_id'):
-                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
-                    blob_client = blob_container_client.get_blob_client(blob_name)
-                    blob_client.delete_blob()
-                
-                if post.get('original_image_url'):
-                    blob_name = post['original_image_url'].split('?')[0].split('/')[-1]
-                    if post.get('user_id'):
-                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
-                    blob_client = blob_container_client.get_blob_client(blob_name)
-                    blob_client.delete_blob()
-                
-                if post.get('filtered_image_url'):
-                    blob_name = post['filtered_image_url'].split('?')[0].split('/')[-1]
-                    if post.get('user_id'):
-                        blob_name = f"{post['user_id']}/{post_id}/{blob_name}"
-                    blob_client = blob_container_client.get_blob_client(blob_name)
-                    blob_client.delete_blob()
-            except Exception as e:
-                print(f"Blob Storage 이미지 삭제 중 오류 발생: {str(e)}")
-            
             cosmos_container.delete_item(item=post, partition_key=post['id'])
             return redirect(url_for("blog"))
         else:
@@ -435,8 +431,8 @@ def add_comment(post_id):
         'user_id': anonymous_id,
         'username': '익명',
         'content': content,
-        'date': datetime.now(KST).isoformat(),  # KST로 저장
-        'date_str': datetime.now(KST).strftime('%Y-%m-%d %H:%M')  # KST로 표시
+        'date': datetime.now().isoformat(),
+        'date_str': datetime.now().strftime('%Y-%m-%d %H:%M')
     }
     
     cosmos_comments_container.create_item(body=comment_data)
@@ -477,26 +473,6 @@ def apply_filter_pgd():
     save_chat_message(message_data)
     return jsonify({"status": "success", "image_url": image_url}), 200
 
-@app.route('/apply_filter_pgd_blog', methods=['POST'])
-def apply_filter_pgd_blog():
-    data = request.get_json()
-    if not data or 'image' not in data:
-        return jsonify({'error': '이미지 데이터가 제공되지 않았습니다.'}), 400
-
-    try:
-        header, encoded = data['image'].split(',', 1)
-        image_data = base64.b64decode(encoded)
-        print(f"Received image data size: {len(image_data)} bytes")
-        
-        processed_image_data = protect_image_pgd(image_data)
-        processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
-        print("Filter applied successfully")
-        
-        return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
-    except Exception as e:
-        print(f"Error in apply_filter_pgd_blog: {str(e)}")
-        return jsonify({'error': f"필터 적용 중 오류: {str(e)}"}), 500
-    
 @app.route('/apply_filter_blog', methods=['POST'])
 def apply_filter_blog():
     data = request.get_json()
@@ -507,6 +483,21 @@ def apply_filter_blog():
         header, encoded = data['image'].split(',', 1)
         image_data = base64.b64decode(encoded)
         processed_image_data = protect_image(image_data)
+        processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
+        return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/apply_filter_pgd_blog', methods=['POST'])
+def apply_filter_pgd_blog():
+    data = request.get_json()
+    if not data or 'image' not in data:
+        return jsonify({'error': '이미지 데이터가 제공되지 않았습니다.'}), 400
+
+    try:
+        header, encoded = data['image'].split(',', 1)
+        image_data = base64.b64decode(encoded)
+        processed_image_data = protect_image_pgd(image_data)
         processed_base64 = base64.b64encode(processed_image_data).decode('utf-8')
         return jsonify({'filtered_image': f"data:image/png;base64,{processed_base64}"})
     except Exception as e:
