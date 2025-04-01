@@ -39,7 +39,7 @@ flowchart LR
     %% 🛠️ GitHub Actions CI/CD
     subgraph GitHub_CI_CD ["🛠️ GitHub Actions (CI/CD)"]
         repo["📁 GitHub<br/>리포지토리"]
-        workflow["⚙️ 빌드/테스트<br/>+ 배포 작업"]
+        workflow["⚙️ 빌드/테스트<br/>+ 배포"]
         repo --> workflow
     end
 
@@ -53,11 +53,11 @@ flowchart LR
     end
 
     %% 🙋 사용자
-    user(["🙋 사용자<br/>클라이언트"]) -->|"🌐 HTTP 요청"| app
-    app -->|📡 "데이터 요청/응답"| db
-    app -->|🔑 "시크릿 참조"| kv
-    dev -->|🔁 "커밋/푸시"| repo
-    workflow -->|🔐 "OIDC 인증 & 배포"| app
+    user(["🙋 사용자<br/>클라이언트"]) -->|🌐 HTTP 요청| app
+    app -->|📡 데이터 요청/응답| db
+    app -->|🔑 시크릿 참조| kv
+    dev -->|🔁 커밋/푸시| repo
+    workflow -->|🔐 인증 및 배포| app
 
     %% 🎨 스타일링
     classDef developer fill:#e6f7ff,stroke:#1890ff,stroke-width:2px;
