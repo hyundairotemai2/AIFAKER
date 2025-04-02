@@ -1,27 +1,31 @@
 # **AIFAKER**
-__PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터__
+
+**PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터**
 
 ---
+
 ## 1. 소개
 
 ### 개요
+
 [코드 깃허브](https://github.com/hyundairotemai2/AIFAKER/blob/main/AIFAKER.ipynb)
 
 [웹페이지](https://aifaker-a7c9ehd0bzbxfpcy.koreasouth-01.azurewebsites.net/)
 
 [프레젠테이션](https://www.canva.com/design/DAGim4xNjVM/OS5Z3hfUzYSrRb0oreUEyw/edit?utm_content=DAGim4xNjVM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
-
 ## 2. 연구 배경 및 필요성
 
 ### 딥페이크 범죄 사례
+
 ![image](https://github.com/user-attachments/assets/453aa3b5-57aa-41bb-a935-d75b765a75df)
-__딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -> 딥페이크를 방지하는 방법이 없을까?__
+**딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -> 딥페이크를 방지하는 방법이 없을까?**
 
 여기에 대한 해결책을 중심으로 연구를 시작하였고 딥페이크 관련 공개된 자료와 그에 대응하는 모델을 연구하게 되었다.
-비즈니스 모델을 적용하여 눈으로 탐지하기 어렵지만 딥페이크 학습을 방해하는 모델을 웹서비스로 구현하는 것을 목표로 하였다. 
+비즈니스 모델을 적용하여 눈으로 탐지하기 어렵지만 딥페이크 학습을 방해하는 모델을 웹서비스로 구현하는 것을 목표로 하였다.
 
 ## 3. 이론 배경
+
 ### 딥페이크 및 StarGANv2
 
 <li>GAN(생성적 적대 신경망)을 기반으로 한 이미지 변환 모델</li>
@@ -36,35 +40,35 @@ __딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -
 graph TD
     A[입력 이미지<br>예: 검은 머리 남성] --> B[스타일 인코더]
     B --> C[스타일 코드<br>예: 금발 스타일]
-    
+
     D[랜덤 노이즈] --> E[매핑 네트워크]
     E --> F[스타일 코드<br>예: 새로운 금발 스타일]
-    
+
     C --> G[생성자]
     F --> G
     A --> G
-    
+
     G --> H[출력 이미지<br>예: 금발 남성]
     H --> I[판별자]
     I --> J[진짜/가짜 판단<br>스타일 일치 여부]
 ```
 
-- **StarGANv2를 딥페이크에 사용하는 이유** 
+- **StarGANv2를 딥페이크에 사용하는 이유**
 
-  -얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨   
-  -최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
+  -얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨  
+  -최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대  
   -다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
-         
-### PGD ( 적대적 노이즈 기법 )  
+
+### PGD ( 적대적 노이즈 기법 )
 
 - PGD의 정의
- 
+
   -PGD(Projected Gradient Descent)는 적대적 공격 기법으로, 입력 이미지에 작은 노이즈를 반복적으로 추가하여 모델을 속이거나 성능을 저하시키는 방법
-  
+
   -경사 하강법을 사용하며, 교란 크기를 epsilon 범위로 제한
 
 - PGD 모델의 작동 방식
- 
+
   -초기 노이즈 추가 후, 손실 함수의 경사를 계산
 
   -경사 방향으로 교란을 업데이트하고, epsilon 내로 투영
@@ -80,17 +84,17 @@ graph TD
         A_adv --> B
         B --> C[스타일 코드<br>금발 스타일]
     end
-    
+
     %% 나머지 플로우
     D[랜덤 노이즈] --> E[매핑 네트워크]
     E --> F[스타일 코드<br>새로운 금발 스타일]
-    
+
     %% 이미지 생성
     A --> G[생성자]
     A_adv --> G
     C --> G
     F --> G
-    
+
     %% 판별 과정
     G --> H[출력 이미지<br>금발 남성]
     H --> I[판별자]
@@ -135,9 +139,10 @@ graph TD
 - **Before**: 적대적 노이즈 적용 전
 - **After**: 적대적 노이즈 적용 후 결과
 
-__이미지에 미세한 조정을 하여 사람 눈으로 차이를 바로 알아보기 어렵다.__
+**이미지에 미세한 조정을 하여 사람 눈으로 차이를 바로 알아보기 어렵다.**
 
 ### StarGANv2 딥페이크 테스트 결과
+
 ![image](https://github.com/user-attachments/assets/06b26764-5b69-46c1-a670-c7c54320aba5)
 
 ## 5. 프로젝트 일정 및 개발 흐름
@@ -154,13 +159,10 @@ gantt
     테스트 :2025-03-22, 4d
 ```
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 6adde3668fd731ff6aa144d52e71a522855ff009
 ## 6. 웹 애플리케이션
 
 ### 전체 아키텍처
+
 ```mermaid
 flowchart LR
     %% 앱 진입 (SNS/Blog 통합)
@@ -197,7 +199,7 @@ flowchart LR
     original_result --> app_start
 
     user(["🙋 사용자"]) -->|🌐 사용| app_start
-    
+
     %% 서브그래프 스타일 (네이버 블로그 테마 간소화)
     style App_Entry fill:#F5F6F5,stroke:#03C75A,stroke-width:1px; %% Naver Blog background and green border
     style Image_Upload fill:#FFFFFF,stroke:#03C75A,stroke-width:1px; %% White background for upload section
@@ -216,10 +218,6 @@ flowchart LR
 
 ![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 6adde3668fd731ff6aa144d52e71a522855ff009
 ## 7. 웹 백엔드 구성
 
 ### 핵심 기술 스택
@@ -337,12 +335,12 @@ erDiagram
 
 ![1EMVf](https://github.com/user-attachments/assets/fe579094-6dad-42ae-80c2-29febb029a9c)
 
-
 ## 8. 한계점 및 향후 개선 방향
-  - 공개된 딥페이크 자료가 부족해서 딥페이크의 다양한 모델에 대한 테스트를 진행하지 못함
 
-    __모델들의 연구를 더 진행하여 추가 필터 적용 예정__
-  
-  - PGD 기법을 활용해 StarGANv2 딥페이크를 방해하는 필터를 완성하였으나 웹서버에 V2 사전학습 데이터는 이식하지 못함 (현재 웹서버에 적용된 필터는 프로토 타입 모델)
-  
-    __사전학습 데이터를 웹 서버에 추가하여 더 자연스러운 필터를 구현할 예정__ 
+- 공개된 딥페이크 자료가 부족해서 딥페이크의 다양한 모델에 대한 테스트를 진행하지 못함
+
+  **모델들의 연구를 더 진행하여 추가 필터 적용 예정**
+
+- PGD 기법을 활용해 StarGANv2 딥페이크를 방해하는 필터를 완성하였으나 웹서버에 V2 사전학습 데이터는 이식하지 못함 (현재 웹서버에 적용된 필터는 프로토 타입 모델)
+
+  **사전학습 데이터를 웹 서버에 추가하여 더 자연스러운 필터를 구현할 예정**
