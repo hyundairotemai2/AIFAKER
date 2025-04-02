@@ -66,9 +66,6 @@ body,h1,h2,h3,h4,h5 {font-family: "Raleway", sans-serif}
         <img src="{{ post.display_image_url }}" 
              class="post-image"
              alt="게시글 이미지">
-        {% if post.original_image_url and post.apply_filter %}
-          <p class="w3-opacity">원본 이미지: <a href="{{ post.original_image_url }}" target="_blank">보기</a></p>
-        {% endif %}
       {% endif %}
     </div>
     
