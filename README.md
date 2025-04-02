@@ -11,9 +11,6 @@ __PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터__
 
 [프레젠테이션](https://www.canva.com/design/DAGim4xNjVM/OS5Z3hfUzYSrRb0oreUEyw/edit?utm_content=DAGim4xNjVM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
-### 시연 자료 링크
-
-![1EMVf](https://github.com/user-attachments/assets/fe579094-6dad-42ae-80c2-29febb029a9c)
 
 ## 2. 연구 배경 및 필요성
 
@@ -157,6 +154,10 @@ gantt
     테스트 :2025-03-22, 4d
 ```
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 6adde3668fd731ff6aa144d52e71a522855ff009
 ## 6. 웹 애플리케이션
 
 ### 전체 아키텍처
@@ -215,7 +216,10 @@ flowchart LR
 
 ![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> 6adde3668fd731ff6aa144d52e71a522855ff009
 ## 7. 웹 백엔드 구성
 
 ### 핵심 기술 스택
@@ -328,6 +332,12 @@ erDiagram
     BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
     CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
+
+### 시연 자료 링크
+
+![1EMVf](https://github.com/user-attachments/assets/fe579094-6dad-42ae-80c2-29febb029a9c)
+
+
 ## 8. 한계점 및 향후 개선 방향
   - 공개된 딥페이크 자료가 부족해서 딥페이크의 다양한 모델에 대한 테스트를 진행하지 못함
 
