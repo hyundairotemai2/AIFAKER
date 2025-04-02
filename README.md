@@ -308,5 +308,7 @@ gantt
     테스트 :2025-03-22, 4d
 ```
 
-![Image](https://github.com/user-attachments/assets/eb459ff4-6caf-4bba-86e6-ad2890dfb15e)
+
+![image](https://github.com/user-attachments/assets/06b26764-5b69-46c1-a670-c7c54320aba5)
+
 
