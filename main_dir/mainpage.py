@@ -1,5 +1,6 @@
 import os
 import base64
+from celery_worker import apply_pgd_filter_task
 import io
 import torch
 import uuid
@@ -322,10 +323,9 @@ def create_post():
         image_url = original_image_url
 
         if apply_filter:
-            filtered_image_data = protect_image_pgd(image_data)
-            filtered_filename = f"pgd_filtered_{filename}"
-            filtered_image_url = upload_to_blob(filtered_image_data, filtered_filename, user_id=anonymous_id, post_id=post_id)
-            image_url = filtered_image_url
+            image_data_base64 = base64.b64encode(image_data).decode('utf-8')
+            apply_pgd_filter_task.delay(image_data_base64, filename, post_id, anonymous_id)
+
 
     post_data = {
         'id': post_id,
@@ -337,7 +337,7 @@ def create_post():
         'original_image_url': original_image_url if image else None,
         'filtered_image_url': filtered_image_url if apply_filter and image else None,
         'apply_filter': apply_filter,
-        'filter_applied': apply_filter,
+        'filter_applied': False,
         'date': datetime.now(KST).isoformat(),  # KST로 저장
         'password': password
     }

@@ -1,7 +1,7 @@
 Flask
 gunicorn
 diffusers
-numpy==1.26.4
+numpy
 werkzeug
 pillow
 matplotlib
@@ -13,3 +13,5 @@ azure-identity
 python-dotenv
 alive-progress
 pytz
+celery==5.3.6
+redis==5.0.1
