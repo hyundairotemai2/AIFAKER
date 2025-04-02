@@ -120,6 +120,9 @@ graph TD
 - **After**: 적대적 노이즈 적용 후 결과
 
 ## 검증 - StarGANv2를 이용한 딥페이크
+![image](https://github.com/user-attachments/assets/06b26764-5b69-46c1-a670-c7c54320aba5)
+
+# 최종 완성 웹
 
 ![1EMVf](https://github.com/user-attachments/assets/fe579094-6dad-42ae-80c2-29febb029a9c)
 
@@ -309,6 +312,5 @@ gantt
 ```
 
 
-![image](https://github.com/user-attachments/assets/06b26764-5b69-46c1-a670-c7c54320aba5)
 
 
