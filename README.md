@@ -37,7 +37,7 @@
 <li>StarGAN v2작동방식</li>
 
 ```mermaid
-graph TD
+graph LR
     A[입력 이미지<br>예: 검은 머리 남성] --> B[스타일 인코더]
     B --> C[스타일 코드<br>예: 금발 스타일]
 
@@ -76,7 +76,7 @@ graph TD
   -지정된 반복 횟수(num_iter) 동안 최적화
 
 ```mermaid
-graph TD
+graph LR
     %% 입력 및 적대적 공격과 스타일 관련 노드를 하나의 서브그래프로 묶음
     subgraph 적대적_공격_및_스타일
         A[입력 이미지<br>검은 머리 남성] -->|원본| B[스타일 인코더]
@@ -130,6 +130,8 @@ graph TD
     <p><strong>Before</strong></p>
     <img src="https://github.com/user-attachments/assets/a6efe100-85c4-4b50-927e-0a377a42f2be" width="45%" alt="Before">
   </div>
+</div>
+<div>
   <div style="text-align: center;">
     <p><strong>After</strong></p>
     <img src="https://github.com/user-attachments/assets/dc603cf1-46f9-4842-a3aa-98a7df9e96dd" width="45%" alt="After">
