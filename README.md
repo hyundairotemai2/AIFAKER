@@ -1,5 +1,6 @@
 # **AIFAKER**
-## PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터
+__PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터__
+
 [코드 깃허브](https://github.com/hyundairotemai2/AIFAKER/blob/main/AIFAKER.ipynb)
 
 [웹페이지](https://aifaker-a7c9ehd0bzbxfpcy.koreasouth-01.azurewebsites.net/)
@@ -10,7 +11,7 @@
 ---
 # 배경
 ![image](https://github.com/user-attachments/assets/453aa3b5-57aa-41bb-a935-d75b765a75df)
-## 딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -> 딥페이크를 방지하는 방법이 없을까?
+__딥페이크만 검색하더라도 관련 범죄에 대해 뉴스가 많다. -> 딥페이크를 방지하는 방법이 없을까?__
 
 # 기술
 ## 딥페이크
