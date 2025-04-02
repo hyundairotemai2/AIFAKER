@@ -195,7 +195,7 @@ flowchart LR
     class app_start,upload_image,noise_model,modified_result,original_result node_style;
 ```
 
-### SNS/블로그 흐름도
+### SNS/블로그 사용자 흐름도
 
 ![image](https://github.com/user-attachments/assets/a9b5ad76-9c19-4c83-b06e-29150a9ce59e)
 
