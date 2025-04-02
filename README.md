@@ -143,7 +143,21 @@ __이미지에 미세한 조정을 하여 사람 눈으로 차이를 바로 알�
 ### StarGANv2 딥페이크 테스트 결과
 ![image](https://github.com/user-attachments/assets/06b26764-5b69-46c1-a670-c7c54320aba5)
 
-## 5. 웹 애플리케이션
+## 5. 프로젝트 일정 및 개발 흐름
+
+```mermaid
+gantt
+    title 프로젝트 일정
+    dateFormat 2025-03
+    section 준비
+    기획 :a1, 2025-03-03, 7d
+    설계 :after a1, 2025-03-10, 4d
+    section 개발
+    기능 개발 :2025-03-12, 10d
+    테스트 :2025-03-22, 4d
+```
+
+## 6. 웹 애플리케이션
 
 ### 전체 아키텍처
 ```mermaid
@@ -201,19 +215,6 @@ flowchart LR
 
 ![image](https://github.com/user-attachments/assets/7daf3bd6-be50-4734-af78-a3af44ca9494)
 
-## 6. 프로젝트 일정 및 개발 흐름
-
-```mermaid
-gantt
-    title 프로젝트 일정
-    dateFormat 2025-03
-    section 준비
-    기획 :a1, 2025-03-03, 7d
-    설계 :after a1, 2025-03-10, 4d
-    section 개발
-    기능 개발 :2025-03-12, 10d
-    테스트 :2025-03-22, 4d
-```
 
 ## 7. 웹 백엔드 구성
 
