@@ -7,6 +7,19 @@ __PGD 기반 적대적 노이즈를 활용한 딥페이크 방지 필터__
 
 [프레젠테이션](https://www.canva.com/design/DAGim4xNjVM/OS5Z3hfUzYSrRb0oreUEyw/edit?utm_content=DAGim4xNjVM&utm_campaign=designshare&utm_medium=link2&utm_source=sharebutton)
 
+## 📅 프로젝트 일정
+
+```mermaid
+gantt
+    title 프로젝트 일정
+    dateFormat 2025-03
+    section 준비
+    기획 :a1, 2025-03-03, 7d
+    설계 :after a1, 2025-03-10, 4d
+    section 개발
+    기능 개발 :2025-03-12, 10d
+    테스트 :2025-03-22, 4d
+```
 
 ---
 # 배경
@@ -42,9 +55,9 @@ graph TD
 
 - **StarGANv2를 딥페이크에 사용하는 이유** 
 
-ㄴ 얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨   
-                          ㄴ 최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
-         ㄴ 다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
+-얼굴 스타일을 자유롭게 바꿀 수 있어서 딥페이크 제작에 활용됨   
+-최신 이미지 변환 모델 중 하나라, 딥페이크 방지 기술을 테스트하기에 적합한 강력한 상대                                                                              
+-다양한 스타일을 다룰 수 있고, 결과가 자연스러워서 실제 딥페이크 시나리오를 시뮬레이션하기 좋음
          
 ## PGD ( 적대적 노이즈 기법 )  
 
@@ -99,11 +112,14 @@ graph TD
 
 -안정성: 반복적 최적화로 신뢰할 수 있는 결과 제공
 
-# 결과
+### PGD를 쓴이유
+-FGSM같은 단일단계공격보다 더 정교한 반복적 접근법 사용.여러 번에 걸쳐서 노이즈를 조금씩 조정하면서 모델이 인식하지 못할 정도로 미세하지만, 최대한 효과적인 방향으로 데이터를 변형
+
+-PGD는 수학적으로 안정적이고 이론적 기반이 탄탄
+
+# 노이즈 적용 결과
 
 ## 필터 적용 Before vs After
-
-## Before vs After
 
 <div style="display: flex; justify-content: space-around;">
   <div style="text-align: center;">
@@ -297,20 +313,9 @@ erDiagram
     BLOG_POSTS ||--o{ BLOB_STORAGE : "stores_images"
     CHAT_MESSAGES ||--o{ BLOB_STORAGE : "stores_images"
 ```
-## 📅 프로젝트 일정
-
-```mermaid
-gantt
-    title 프로젝트 일정
-    dateFormat 2025-03
-    section 준비
-    기획 :a1, 2025-03-03, 7d
-    설계 :after a1, 2025-03-10, 4d
-    section 개발
-    기능 개발 :2025-03-12, 10d
-    테스트 :2025-03-22, 4d
-```
-
+## 회고
+- PGD 기법을 활용해 StarGANv2 딥페이크를 방해하는 필터를 성공적으로 설계 -> 다양한 모델에 대한 테스트를 진행하지 못함
+- 프로젝트 일정상 시간이 부족하여 완성도를 조금 더 높이지 못함
 
 
 
