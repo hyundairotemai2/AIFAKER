@@ -1,7 +1,6 @@
 Flask
 gunicorn
 diffusers
-numpy
 werkzeug
 pillow
 matplotlib
