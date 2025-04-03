@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel
 
 # ✅ numpy 먼저 (torchvision 등의 to_tensor 사용을 위해)
-RUN pip install --no-cache-dir numpy
+RUN pip install --no-cache-dir "numpy<2"
 
 # ✅ 나머지 패키지
 RUN pip install --no-cache-dir -r requirements.txt
